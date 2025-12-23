@@ -863,6 +863,190 @@ const mockReports: Record<string, DeliveryReport> = {
     createdAt: new Date(Date.now() - 3600000).toISOString(),
     updatedAt: new Date(Date.now() - 3600000).toISOString(),
   },
+  '2': {
+    id: 'report-2',
+    taskId: '2',
+    taskTitle: '添加支付功能',
+    requirementUrl: 'https://example.com/req/payment',
+    requirementStatus: 'ai_completed',
+    tokenConsumed: 89000,
+    mergeRequests: [
+      {
+        id: 'mr-2',
+        gitRepoName: 'ai-delivery-backend',
+        gitRepoUrl: 'https://github.com/example/ai-delivery-backend',
+        mrUrl: 'https://github.com/example/ai-delivery-backend/pull/124',
+        status: 'open',
+        createdAt: new Date(Date.now() - 3600000).toISOString(),
+      },
+      {
+        id: 'mr-3',
+        gitRepoName: 'ai-delivery-frontend',
+        gitRepoUrl: 'https://github.com/example/ai-delivery-frontend',
+        mrUrl: 'https://github.com/example/ai-delivery-frontend/pull/45',
+        status: 'open',
+        createdAt: new Date(Date.now() - 3600000).toISOString(),
+      },
+    ],
+    impactAnalysis: [
+      {
+        module: '支付模块',
+        description: '集成支付宝和微信支付SDK,新增支付回调处理',
+        severity: 'high',
+        upstreamServices: ['支付宝开放平台', '微信支付平台'],
+        downstreamServices: ['订单系统', '账户系统', '通知系统'],
+      },
+      {
+        module: '订单模块',
+        description: '增加支付状态字段和支付回调处理逻辑',
+        severity: 'medium',
+        upstreamServices: [],
+        downstreamServices: ['库存系统', '物流系统'],
+      },
+    ],
+    codeChanges: [
+      {
+        id: 'change-2',
+        gitRepoName: 'ai-delivery-backend',
+        filePath: 'src/services/payment.service.ts',
+        changeType: 'added',
+        createdAt: new Date(Date.now() - 3600000).toISOString(),
+        content: `export class PaymentService {
+  async createAlipayOrder(orderId: string, amount: number) {
+    const alipayClient = new AlipayClient(config);
+    const result = await alipayClient.createOrder({
+      orderId,
+      amount,
+      subject: '商品购买',
+      notifyUrl: '/api/payment/alipay/callback'
+    });
+    return result;
+  }
+  
+  async createWechatOrder(orderId: string, amount: number) {
+    const wechatClient = new WechatPayClient(config);
+    const result = await wechatClient.createOrder({
+      orderId,
+      amount,
+      description: '商品购买',
+      notifyUrl: '/api/payment/wechat/callback'
+    });
+    return result;
+  }
+  
+  async handleCallback(provider: string, data: any) {
+    const order = await Order.findByPaymentId(data.orderId);
+    order.status = 'paid';
+    await order.save();
+    return { success: true };
+  }
+}`,
+      },
+      {
+        id: 'change-3',
+        gitRepoName: 'ai-delivery-frontend',
+        filePath: 'src/components/PaymentModal.tsx',
+        changeType: 'added',
+        createdAt: new Date(Date.now() - 3600000).toISOString(),
+        content: `export const PaymentModal: React.FC<Props> = ({ orderId, amount }) => {
+  const [paymentMethod, setPaymentMethod] = useState<'alipay' | 'wechat'>('alipay');
+  
+  const handlePay = async () => {
+    try {
+      const result = await paymentApi.createOrder({
+        orderId,
+        amount,
+        method: paymentMethod
+      });
+      window.location.href = result.payUrl;
+    } catch (error) {
+      message.error('创建支付订单失败');
+    }
+  };
+  
+  return (
+    <Modal title="选择支付方式" visible={true}>
+      <Radio.Group value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}>
+        <Radio value="alipay">支付宝</Radio>
+        <Radio value="wechat">微信支付</Radio>
+      </Radio.Group>
+      <Button type="primary" onClick={handlePay}>确认支付</Button>
+    </Modal>
+  );
+}`,
+      },
+    ],
+    databaseChanges: [
+      {
+        id: 'db-2',
+        changeType: 'DDL',
+        description: '创建 payments 表',
+        createdAt: new Date(Date.now() - 3600000).toISOString(),
+        sqlScript: `CREATE TABLE payments (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  order_id BIGINT NOT NULL,
+  payment_method VARCHAR(20) NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  status VARCHAR(20) DEFAULT 'pending',
+  transaction_id VARCHAR(100),
+  paid_at TIMESTAMP NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (order_id) REFERENCES orders(id)
+);`,
+      },
+      {
+        id: 'db-3',
+        changeType: 'DDL',
+        description: '修改 orders 表添加支付状态',
+        createdAt: new Date(Date.now() - 3600000).toISOString(),
+        sqlScript: `ALTER TABLE orders 
+  ADD COLUMN payment_status VARCHAR(20) DEFAULT 'unpaid',
+  ADD COLUMN payment_id BIGINT NULL,
+  ADD FOREIGN KEY (payment_id) REFERENCES payments(id);`,
+      },
+    ],
+    configChanges: [
+      {
+        id: 'config-2',
+        configType: 'file',
+        configKey: 'ALIPAY_APP_ID',
+        filePath: '.env',
+        oldValue: '',
+        newValue: 'your-alipay-app-id',
+        createdAt: new Date(Date.now() - 3600000).toISOString(),
+      },
+      {
+        id: 'config-3',
+        configType: 'file',
+        configKey: 'ALIPAY_PRIVATE_KEY',
+        filePath: '.env',
+        oldValue: '',
+        newValue: 'your-alipay-private-key',
+        createdAt: new Date(Date.now() - 3600000).toISOString(),
+      },
+      {
+        id: 'config-4',
+        configType: 'file',
+        configKey: 'WECHAT_APP_ID',
+        filePath: '.env',
+        oldValue: '',
+        newValue: 'your-wechat-app-id',
+        createdAt: new Date(Date.now() - 3600000).toISOString(),
+      },
+      {
+        id: 'config-5',
+        configType: 'file',
+        configKey: 'WECHAT_MCH_ID',
+        filePath: '.env',
+        oldValue: '',
+        newValue: 'your-wechat-mch-id',
+        createdAt: new Date(Date.now() - 3600000).toISOString(),
+      },
+    ],
+    createdAt: new Date(Date.now() - 1800000).toISOString(),
+    updatedAt: new Date(Date.now() - 1800000).toISOString(),
+  },
 };
 
 // 添加响应拦截器，在生产环境返回 Mock 数据
