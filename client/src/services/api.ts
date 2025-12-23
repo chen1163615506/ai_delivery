@@ -140,6 +140,138 @@ const mockPendingRequirements: PendingRequirement[] = [
   },
 ];
 
+// Mock 会话数据 - 按任务ID组织
+const mockConversations: Record<string, Conversation[]> = {
+  '1': [
+    {
+      id: 'conv-1',
+      taskId: '1',
+      role: 'assistant',
+      content: '开始分析需求：实现用户认证功能',
+      step: '需求分析',
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+    },
+    {
+      id: 'conv-2',
+      taskId: '1',
+      role: 'assistant',
+      content: '正在设计数据库表结构...',
+      step: '数据库设计',
+      createdAt: new Date(Date.now() - 86000000).toISOString(),
+    },
+    {
+      id: 'conv-3',
+      taskId: '1',
+      role: 'assistant',
+      content: '实现用户注册和登录接口',
+      step: '代码实现',
+      createdAt: new Date(Date.now() - 85000000).toISOString(),
+    },
+  ],
+  '2': [
+    {
+      id: 'conv-4',
+      taskId: '2',
+      role: 'assistant',
+      content: '开始分析支付功能需求',
+      step: '需求分析',
+      createdAt: new Date(Date.now() - 7200000).toISOString(),
+    },
+    {
+      id: 'conv-5',
+      taskId: '2',
+      role: 'assistant',
+      content: '正在集成支付宝 SDK...',
+      step: '代码实现',
+      createdAt: new Date(Date.now() - 3600000).toISOString(),
+    },
+  ],
+};
+
+// Mock 交付报告数据 - 按任务ID组织
+const mockReports: Record<string, DeliveryReport> = {
+  '1': {
+    id: 'report-1',
+    taskId: '1',
+    taskTitle: '实现用户认证功能',
+    requirementUrl: 'https://example.com/req/auth',
+    requirementStatus: 'ai_completed',
+    tokenConsumed: 125000,
+    mergeRequests: [
+      {
+        id: 'mr-1',
+        gitRepoName: 'ai-delivery-backend',
+        gitRepoUrl: 'https://github.com/example/ai-delivery-backend',
+        mrUrl: 'https://github.com/example/ai-delivery-backend/pull/123',
+        status: 'merged',
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
+      },
+    ],
+    impactAnalysis: [
+      {
+        module: '用户认证模块',
+        description: '新增用户注册、登录、密码重置功能',
+        severity: 'medium',
+        upstreamServices: [],
+        downstreamServices: ['用户中心', '权限管理'],
+      },
+    ],
+    codeChanges: [
+      {
+        id: 'change-1',
+        gitRepoName: 'ai-delivery-backend',
+        filePath: 'src/controllers/auth.controller.ts',
+        changeType: 'added',
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
+        content: `export class AuthController {
+  async register(req: Request, res: Response) {
+    const { username, email, password } = req.body;
+    // 实现注册逻辑
+    const user = await User.create({ username, email, password });
+    return res.json({ success: true, data: user });
+  }
+  
+  async login(req: Request, res: Response) {
+    const { username, password } = req.body;
+    // 实现登录逻辑
+    const token = await authService.login(username, password);
+    return res.json({ success: true, token });
+  }
+}`,
+      },
+    ],
+    databaseChanges: [
+      {
+        id: 'db-1',
+        changeType: 'DDL',
+        description: '创建 users 表',
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
+        sqlScript: `CREATE TABLE users (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  username VARCHAR(50) UNIQUE NOT NULL,
+  email VARCHAR(100) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);`,
+      },
+    ],
+    configChanges: [
+      {
+        id: 'config-1',
+        configType: 'file',
+        configKey: 'JWT_SECRET',
+        filePath: '.env',
+        oldValue: '',
+        newValue: 'your-secret-key-here',
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
+      },
+    ],
+    createdAt: new Date(Date.now() - 3600000).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000).toISOString(),
+  },
+};
+
 // 添加响应拦截器，在生产环境返回 Mock 数据
 // 始终使用 Mock 数据拦截器
 if (true) {
@@ -182,13 +314,29 @@ if (true) {
         }
 
         if (url?.includes('/conversations')) {
+          const taskId = url.split('/')[2];
+          const conversations = mockConversations[taskId] || [];
           return Promise.resolve({
-            data: { success: true, data: [] },
+            data: { success: true, data: conversations },
             status: 200,
             statusText: 'OK',
             headers: {},
             config: error.config,
           });
+        }
+
+        if (url?.includes('/report')) {
+          const taskId = url.split('/')[2];
+          const report = mockReports[taskId];
+          if (report) {
+            return Promise.resolve({
+              data: { success: true, data: report },
+              status: 200,
+              statusText: 'OK',
+              headers: {},
+              config: error.config,
+            });
+          }
         }
       }
 
@@ -250,4 +398,6 @@ export const taskApi = {
 };
 
 export default api;
+
+
 
