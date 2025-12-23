@@ -1460,7 +1460,17 @@ export default new PushNotificationService();`,
 // Mock数据适配器 - 直接返回mock数据而不发送真实请求
 const mockAdapter = (config: any) => {
   return new Promise((resolve) => {
-    const url = config.url;
+    // 获取URL，支持完整URL和相对路径
+    let url = config.url || '';
+
+    // 如果是完整URL，提取路径部分
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      try {
+        url = new URL(url).pathname;
+      } catch (e) {
+        console.error('Failed to parse URL:', url);
+      }
+    }
 
     // 项目列表
     if (url?.includes('/projects') && config.method === 'get') {
@@ -1477,6 +1487,46 @@ const mockAdapter = (config: any) => {
     if (url?.includes('/tasks/pending-requirements')) {
       return resolve({
         data: { success: true, data: mockPendingRequirements },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config,
+      });
+    }
+
+    // 交付报告 - 需要在任务详情之前检查
+    if (url?.includes('/report')) {
+      const parts = url.split('/');
+      const taskIdIndex = parts.indexOf('tasks') + 1;
+      const taskId = parts[taskIdIndex];
+      const report = mockReports[taskId];
+      if (report) {
+        return resolve({
+          data: { success: true, data: report },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config,
+        });
+      }
+      // 如果没有报告,返回404
+      return resolve({
+        data: { success: false, error: 'Report not found' },
+        status: 404,
+        statusText: 'Not Found',
+        headers: {},
+        config,
+      });
+    }
+
+    // 会话记录
+    if (url?.includes('/conversations')) {
+      const parts = url.split('/');
+      const taskIdIndex = parts.indexOf('tasks') + 1;
+      const taskId = parts[taskIdIndex];
+      const conversations = mockConversations[taskId] || [];
+      return resolve({
+        data: { success: true, data: conversations },
         status: 200,
         statusText: 'OK',
         headers: {},
@@ -1505,42 +1555,6 @@ const mockAdapter = (config: any) => {
         data: { success: true, data: mockTasks },
         status: 200,
         statusText: 'OK',
-        headers: {},
-        config,
-      });
-    }
-
-    // 会话记录
-    if (url?.includes('/conversations')) {
-      const taskId = url.split('/')[2];
-      const conversations = mockConversations[taskId] || [];
-      return resolve({
-        data: { success: true, data: conversations },
-        status: 200,
-        statusText: 'OK',
-        headers: {},
-        config,
-      });
-    }
-
-    // 交付报告
-    if (url?.includes('/report')) {
-      const taskId = url.split('/')[2];
-      const report = mockReports[taskId];
-      if (report) {
-        return resolve({
-          data: { success: true, data: report },
-          status: 200,
-          statusText: 'OK',
-          headers: {},
-          config,
-        });
-      }
-      // 如果没有报告,返回404
-      return resolve({
-        data: { success: false, error: 'Report not found' },
-        status: 404,
-        statusText: 'Not Found',
         headers: {},
         config,
       });
