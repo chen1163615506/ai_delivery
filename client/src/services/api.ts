@@ -1457,9 +1457,114 @@ export default new PushNotificationService();`,
   },
 };
 
+// Mock数据适配器 - 直接返回mock数据而不发送真实请求
+const mockAdapter = (config: any) => {
+  return new Promise((resolve) => {
+    const url = config.url;
+
+    // 项目列表
+    if (url?.includes('/projects') && config.method === 'get') {
+      return resolve({
+        data: { success: true, data: mockProjects },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config,
+      });
+    }
+
+    // 待下发任务
+    if (url?.includes('/tasks/pending-requirements')) {
+      return resolve({
+        data: { success: true, data: mockPendingRequirements },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config,
+      });
+    }
+
+    // 单个任务详情 /tasks/:id
+    if (url?.match(/\/tasks\/\d+$/) && !url.includes('/conversations') && !url.includes('/report')) {
+      const taskId = url.split('/').pop();
+      const task = mockTasks.find(t => t.id === taskId);
+      if (task) {
+        return resolve({
+          data: { success: true, data: task },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config,
+        });
+      }
+    }
+
+    // 任务列表 /tasks
+    if (url?.includes('/tasks') && !url.includes('/conversations') && !url.includes('/report') && !url?.match(/\/tasks\/\d+$/)) {
+      return resolve({
+        data: { success: true, data: mockTasks },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config,
+      });
+    }
+
+    // 会话记录
+    if (url?.includes('/conversations')) {
+      const taskId = url.split('/')[2];
+      const conversations = mockConversations[taskId] || [];
+      return resolve({
+        data: { success: true, data: conversations },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config,
+      });
+    }
+
+    // 交付报告
+    if (url?.includes('/report')) {
+      const taskId = url.split('/')[2];
+      const report = mockReports[taskId];
+      if (report) {
+        return resolve({
+          data: { success: true, data: report },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config,
+        });
+      }
+      // 如果没有报告,返回404
+      return resolve({
+        data: { success: false, error: 'Report not found' },
+        status: 404,
+        statusText: 'Not Found',
+        headers: {},
+        config,
+      });
+    }
+
+    // 默认返回404
+    return resolve({
+      data: { success: false, error: 'Not found' },
+      status: 404,
+      statusText: 'Not Found',
+      headers: {},
+      config,
+    });
+  });
+};
+
+// 在生产环境使用mock adapter
+if (isProduction || true) {  // 暂时总是使用mock数据
+  api.defaults.adapter = mockAdapter as any;
+}
+
 // 添加响应拦截器，在生产环境返回 Mock 数据
 // 始终使用 Mock 数据拦截器
-if (true) {
+if (false) {  // 禁用旧的拦截器
   api.interceptors.response.use(
     (response) => response,
     (error) => {
@@ -1597,6 +1702,8 @@ export const taskApi = {
 };
 
 export default api;
+
+
 
 
 
