@@ -53,7 +53,7 @@ const mockTasks: Task[] = [
     projectId: '1',
     title: '添加支付功能',
     description: '集成支付宝和微信支付',
-    status: 'in_progress',
+    status: 'pending_confirm',
     createdBy: 'user1',
     createdAt: new Date(Date.now() - 7200000).toISOString(),
     updatedAt: new Date().toISOString(),
@@ -63,7 +63,7 @@ const mockTasks: Task[] = [
     projectId: '2',
     title: '优化代码补全算法',
     description: '提升代码补全的准确率和响应速度',
-    status: 'in_progress',
+    status: 'completed',
     createdBy: 'user2',
     createdAt: new Date(Date.now() - 3600000).toISOString(),
     updatedAt: new Date().toISOString(),
@@ -1046,6 +1046,142 @@ const mockReports: Record<string, DeliveryReport> = {
     ],
     createdAt: new Date(Date.now() - 1800000).toISOString(),
     updatedAt: new Date(Date.now() - 1800000).toISOString(),
+  },
+  '3': {
+    id: 'report-3',
+    taskId: '3',
+    taskTitle: '优化代码补全算法',
+    requirementUrl: 'https://example.com/req/code-completion',
+    requirementStatus: 'ai_completed',
+    tokenConsumed: 156000,
+    mergeRequests: [
+      {
+        id: 'mr-4',
+        gitRepoName: 'codelink-ai-engine',
+        gitRepoUrl: 'https://github.com/example/codelink-ai-engine',
+        mrUrl: 'https://github.com/example/codelink-ai-engine/pull/89',
+        status: 'merged',
+        createdAt: new Date(Date.now() - 7200000).toISOString(),
+      },
+    ],
+    impactAnalysis: [
+      {
+        module: 'AI推理引擎',
+        description: '优化模型推理速度,提升代码补全准确率',
+        severity: 'high',
+        upstreamServices: ['模型服务', 'GPU集群'],
+        downstreamServices: ['编辑器插件', 'Web IDE'],
+      },
+      {
+        module: '缓存系统',
+        description: '新增智能缓存策略,减少重复推理',
+        severity: 'medium',
+        upstreamServices: [],
+        downstreamServices: ['Redis集群'],
+      },
+    ],
+    codeChanges: [
+      {
+        id: 'change-4',
+        gitRepoName: 'codelink-ai-engine',
+        filePath: 'src/inference/optimizer.py',
+        changeType: 'modified',
+        createdAt: new Date(Date.now() - 7200000).toISOString(),
+        content: `class InferenceOptimizer:
+    def __init__(self, model_path: str, cache_size: int = 10000):
+        self.model = self.load_model(model_path)
+        self.cache = LRUCache(cache_size)
+        self.batch_processor = BatchProcessor(max_batch_size=32)
+    
+    async def complete_code(self, context: str, cursor_pos: int) -> List[Completion]:
+        cache_key = self.get_cache_key(context, cursor_pos)
+        if cache_key in self.cache:
+            return self.cache[cache_key]
+        
+        result = await self.batch_processor.process(
+            context, cursor_pos, temperature=0.2, top_p=0.95
+        )
+        
+        completions = self.post_process(result)
+        self.cache[cache_key] = completions
+        return completions`,
+      },
+      {
+        id: 'change-5',
+        gitRepoName: 'codelink-ai-engine',
+        filePath: 'src/cache/smart_cache.py',
+        changeType: 'added',
+        createdAt: new Date(Date.now() - 7200000).toISOString(),
+        content: `class SmartCache:
+    def __init__(self, redis_client, ttl: int = 3600):
+        self.redis = redis_client
+        self.ttl = ttl
+        self.hit_rate_tracker = HitRateTracker()
+    
+    def get_cache_key(self, context: str, cursor_pos: int) -> str:
+        semantic_hash = self.compute_semantic_hash(context)
+        return f"completion:{semantic_hash}:{cursor_pos}"
+    
+    async def get(self, key: str) -> Optional[Any]:
+        result = await self.redis.get(key)
+        if result:
+            self.hit_rate_tracker.record_hit()
+            return json.loads(result)
+        self.hit_rate_tracker.record_miss()
+        return None`,
+      },
+    ],
+    databaseChanges: [
+      {
+        id: 'db-4',
+        changeType: 'DDL',
+        description: '创建代码补全统计表',
+        createdAt: new Date(Date.now() - 7200000).toISOString(),
+        sqlScript: `CREATE TABLE completion_stats (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  language VARCHAR(50) NOT NULL,
+  completion_count INT DEFAULT 0,
+  acceptance_rate DECIMAL(5,2),
+  avg_latency_ms INT,
+  date DATE NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_user_date (user_id, date),
+  INDEX idx_language (language)
+);`,
+      },
+    ],
+    configChanges: [
+      {
+        id: 'config-6',
+        configType: 'file',
+        configKey: 'MODEL_VERSION',
+        filePath: '.env',
+        oldValue: 'v2.1.0',
+        newValue: 'v2.3.0',
+        createdAt: new Date(Date.now() - 7200000).toISOString(),
+      },
+      {
+        id: 'config-7',
+        configType: 'file',
+        configKey: 'CACHE_SIZE',
+        filePath: '.env',
+        oldValue: '5000',
+        newValue: '10000',
+        createdAt: new Date(Date.now() - 7200000).toISOString(),
+      },
+      {
+        id: 'config-8',
+        configType: 'file',
+        configKey: 'BATCH_SIZE',
+        filePath: '.env',
+        oldValue: '16',
+        newValue: '32',
+        createdAt: new Date(Date.now() - 7200000).toISOString(),
+      },
+    ],
+    createdAt: new Date(Date.now() - 5400000).toISOString(),
+    updatedAt: new Date(Date.now() - 5400000).toISOString(),
   },
 };
 
