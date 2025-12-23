@@ -1049,77 +1049,48 @@ const mockReports: Record<string, DeliveryReport> = {
   },
 };
 
-// 添加响应拦截器，在生产环境返回 Mock 数据
-// 始终使用 Mock 数据拦截器
-if (true) {
-  api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-      // 如果是网络错误或超时，返回 Mock 数据
-      // 捕获所有错误并返回 Mock 数据
+// 在生产环境使用 Mock 数据适配器
+if (isProduction) {
+  // 使用自定义 adapter 直接返回 mock 数据,不发起真实请求
+  const mockAdapter = (config: any) => {
+    return new Promise((resolve) => {
+      // 模拟网络延迟
+      setTimeout(() => {
+        const url = config.url || '';
+        let responseData;
 
-      const url = error.config.url;
-        if (url?.includes('/projects')) {
-          return Promise.resolve({
-            data: { success: true, data: mockProjects },
-            status: 200,
-            statusText: 'OK',
-            headers: {},
-            config: error.config,
-          });
-        }
-
-        if (url?.includes('/tasks/pending-requirements')) {
-          return Promise.resolve({
-            data: { success: true, data: mockPendingRequirements },
-            status: 200,
-            statusText: 'OK',
-            headers: {},
-            config: error.config,
-          });
-        }
-
-        if (url?.includes('/tasks') && !url.includes('/conversations') && !url.includes('/report')) {
-          return Promise.resolve({
-            data: { success: true, data: mockTasks },
-            status: 200,
-            statusText: 'OK',
-            headers: {},
-            config: error.config,
-          });
-        }
-
-        if (url?.includes('/conversations')) {
+        if (url.includes('/projects')) {
+          responseData = { success: true, data: mockProjects };
+        } else if (url.includes('/tasks/pending-requirements')) {
+          responseData = { success: true, data: mockPendingRequirements };
+        } else if (url.includes('/conversations')) {
           const taskId = url.split('/')[2];
           const conversations = mockConversations[taskId] || [];
-          return Promise.resolve({
-            data: { success: true, data: conversations },
-            status: 200,
-            statusText: 'OK',
-            headers: {},
-            config: error.config,
-          });
-        }
-
-        if (url?.includes('/report')) {
+          responseData = { success: true, data: conversations };
+        } else if (url.includes('/report')) {
           const taskId = url.split('/')[2];
           const report = mockReports[taskId];
-          if (report) {
-            return Promise.resolve({
-              data: { success: true, data: report },
-              status: 200,
-              statusText: 'OK',
-              headers: {},
-              config: error.config,
-            });
-          }
+          responseData = report ? { success: true, data: report } : { success: false, message: 'Report not found' };
+        } else if (url.includes('/tasks')) {
+          responseData = { success: true, data: mockTasks };
+        } else {
+          responseData = { success: false, message: 'Not found' };
         }
 
-      return Promise.reject(error);
-    }
-  );
-}
+        resolve({
+          data: responseData,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config,
+        });
+      }, 100);
+    });
+  };
 
+  // 设置自定义 adapter
+  api.defaults.adapter = mockAdapter as any;
+}
 // 项目相关API
 export const projectApi = {
   getAll: () => api.get<{ success: boolean; data: Project[] }>('/projects'),
