@@ -1487,7 +1487,23 @@ if (true) {
           });
         }
 
-        if (url?.includes('/tasks') && !url.includes('/conversations') && !url.includes('/report')) {
+        // 处理单个任务详情 /tasks/:id
+        if (url?.match(/\/tasks\/\d+$/) && !url.includes('/conversations') && !url.includes('/report')) {
+          const taskId = url.split('/').pop();
+          const task = mockTasks.find(t => t.id === taskId);
+          if (task) {
+            return Promise.resolve({
+              data: { success: true, data: task },
+              status: 200,
+              statusText: 'OK',
+              headers: {},
+              config: error.config,
+            });
+          }
+        }
+
+        // 处理任务列表 /tasks
+        if (url?.includes('/tasks') && !url.includes('/conversations') && !url.includes('/report') && !url?.match(/\/tasks\/\d+$/)) {
           return Promise.resolve({
             data: { success: true, data: mockTasks },
             status: 200,
@@ -1581,6 +1597,7 @@ export const taskApi = {
 };
 
 export default api;
+
 
 
 
