@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Button, List, Tag, Typography, Divider, Empty } from 'antd';
+import { Layout, Button, List, Typography, Divider, Empty } from 'antd';
 import {
   PlusOutlined,
   FolderOutlined,
@@ -66,35 +66,6 @@ const MainLayout = () => {
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return '待处理';
-      case 'in_progress':
-        return '进行中';
-      case 'completed':
-        return '已完成';
-      case 'failed':
-        return '失败';
-      default:
-        return status;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'warning';
-      case 'in_progress':
-        return 'processing';
-      case 'completed':
-        return 'success';
-      case 'failed':
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
 
   return (
     <Layout style={{ minHeight: '100vh' }}>

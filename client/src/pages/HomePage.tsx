@@ -6,13 +6,11 @@ import {
   Select,
   List,
   Tag,
-  Collapse,
   Empty,
   message,
   Space,
   Typography,
   Card,
-  Divider,
 } from 'antd';
 import { SendOutlined, PlusOutlined, LinkOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { projectApi, taskApi } from '../services/api';
