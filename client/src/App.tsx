@@ -16,7 +16,7 @@ function App() {
         },
       }}
     >
-      <BrowserRouter>
+      <BrowserRouter basename="/ai_delivery">
         <Routes>
           <Route path="/" element={<MainLayout />}>
             <Route index element={<HomePage />} />
