@@ -780,6 +780,274 @@ export const VirtualScroll: React.FC<{ lines: string[] }> = ({ lines }) => {
       step: '执行开发',
     },
   ],
+  '4': [
+    {
+      id: 'conv-4-1',
+      taskId: '4',
+      role: 'user',
+      content: '实现消息推送功能，支持即时消息推送和离线消息',
+      createdAt: new Date('2024-01-19T14:00:00'),
+      step: '需求提交',
+    },
+    {
+      id: 'conv-4-2',
+      taskId: '4',
+      role: 'assistant',
+      content: '收到需求，开始分析项目结构和技术方案...',
+      structuredContent: {
+        type: 'analysis',
+        analysis: [
+          { label: '项目', value: 'Moma移动办公平台', type: 'info' },
+          { label: '涉及仓库', value: 'moma-backend, moma-mobile', type: 'info' },
+          { label: '预计工作量', value: '5-7小时', type: 'warning' },
+          { label: '推送方案', value: '极光推送(JPush)', type: 'info' },
+        ],
+      },
+      createdAt: new Date('2024-01-19T14:01:00'),
+      step: '需求分析',
+    },
+    {
+      id: 'conv-4-3',
+      taskId: '4',
+      role: 'assistant',
+      content: '基于项目知识库分析，需要修改以下Git仓库：',
+      structuredContent: {
+        type: 'tree',
+        tree: [
+          {
+            key: 'moma-backend',
+            title: 'moma-backend',
+            icon: 'github',
+            children: [
+              { key: 'push-service', title: '集成极光推送SDK', status: 'completed' },
+              { key: 'message-controller', title: '实现消息控制器', status: 'completed' },
+              { key: 'message-model', title: '创建消息数据模型', status: 'completed' },
+            ],
+          },
+          {
+            key: 'moma-mobile',
+            title: 'moma-mobile',
+            icon: 'github',
+            children: [
+              { key: 'push-init', title: '初始化推送SDK', status: 'completed' },
+              { key: 'notification-handler', title: '实现通知处理器', status: 'completed' },
+              { key: 'message-center', title: '创建消息中心页面', status: 'completed' },
+            ],
+          },
+        ],
+      },
+      createdAt: new Date('2024-01-19T14:02:00'),
+      step: 'Git仓库分析',
+    },
+    {
+      id: 'conv-4-4',
+      taskId: '4',
+      role: 'assistant',
+      content: '制定实施计划，以下是详细的任务清单：',
+      structuredContent: {
+        type: 'todo',
+        todos: [
+          {
+            id: 'todo-4-1',
+            content: '后端：集成极光推送SDK',
+            status: 'completed',
+            type: 'task',
+            children: [
+              {
+                id: 'todo-4-1-repo',
+                content: 'moma-backend',
+                status: 'completed',
+                type: 'repo',
+                children: [
+                  {
+                    id: 'todo-4-1-file-1',
+                    content: 'src/services/push.service.ts',
+                    status: 'completed',
+                    type: 'file',
+                    children: [
+                      {
+                        id: 'todo-4-1-code-1',
+                        content: '推送服务实现',
+                        status: 'completed',
+                        type: 'code',
+                        code: {
+                          language: 'typescript',
+                          content: `import JPush from 'jpush-sdk';
+
+export class PushService {
+  private client: JPush.JPushClient;
+
+  constructor() {
+    this.client = JPush.buildClient({
+      appKey: process.env.JPUSH_APP_KEY,
+      masterSecret: process.env.JPUSH_MASTER_SECRET
+    });
+  }
+
+  async sendToUser(userId: string, notification: PushNotification) {
+    const result = await this.client.push()
+      .setPlatform(JPush.ALL)
+      .setAudience(JPush.alias(userId))
+      .setNotification(notification.title, notification.body)
+      .send();
+
+    return result;
+  }
+}`
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            id: 'todo-4-2',
+            content: '后端：实现消息控制器和数据模型',
+            status: 'completed',
+            type: 'task',
+          },
+          {
+            id: 'todo-4-3',
+            content: '移动端：初始化推送SDK',
+            status: 'completed',
+            type: 'task',
+          },
+          {
+            id: 'todo-4-4',
+            content: '移动端：实现通知处理和消息中心',
+            status: 'completed',
+            type: 'task',
+          },
+          {
+            id: 'todo-4-5',
+            content: '数据库：创建消息表和推送记录表',
+            status: 'completed',
+            type: 'task',
+          },
+          {
+            id: 'todo-4-6',
+            content: '测试：推送功能测试',
+            status: 'completed',
+            type: 'task',
+          },
+        ],
+      },
+      createdAt: new Date('2024-01-19T14:03:00'),
+      step: '任务规划与执行',
+    },
+    {
+      id: 'conv-4-5',
+      taskId: '4',
+      role: 'assistant',
+      content: '已完成推送服务的集成',
+      structuredContent: {
+        type: 'code',
+        code: {
+          language: 'typescript',
+          fileName: 'src/services/push.service.ts',
+          content: `import JPush from 'jpush-sdk';
+
+export class PushService {
+  private client: JPush.JPushClient;
+
+  constructor() {
+    this.client = JPush.buildClient({
+      appKey: process.env.JPUSH_APP_KEY,
+      masterSecret: process.env.JPUSH_MASTER_SECRET,
+      isDebug: process.env.NODE_ENV !== 'production'
+    });
+  }
+
+  async sendToUser(userId: string, notification: PushNotification) {
+    try {
+      const result = await this.client.push()
+        .setPlatform(JPush.ALL)
+        .setAudience(JPush.alias(userId))
+        .setNotification(notification.title, JPush.ios(notification.body), JPush.android(notification.body))
+        .send();
+
+      await this.savePushRecord({ userId, notification, status: 'sent', result });
+      return result;
+    } catch (error) {
+      console.error('Push notification failed:', error);
+      throw error;
+    }
+  }
+}`,
+        },
+      },
+      createdAt: new Date('2024-01-19T14:30:00'),
+      step: '实现推送服务',
+    },
+    {
+      id: 'conv-4-6',
+      taskId: '4',
+      role: 'assistant',
+      content: '已完成移动端推送SDK初始化',
+      structuredContent: {
+        type: 'code',
+        code: {
+          language: 'typescript',
+          fileName: 'src/services/PushNotificationService.ts',
+          content: `import JPush from 'jpush-react-native';
+
+class PushNotificationService {
+  init() {
+    JPush.init();
+
+    // 监听通知
+    JPush.addNotificationListener((notification) => {
+      this.handleNotification(notification);
+    });
+
+    // 监听自定义消息
+    JPush.addCustomMessageListener((message) => {
+      this.handleCustomMessage(message);
+    });
+  }
+
+  handleNotification(notification: any) {
+    if (notification.notificationEventType === 'notificationOpened') {
+      const { messageId } = notification.extras;
+      NavigationService.navigate('MessageDetail', { messageId });
+    }
+  }
+}
+
+export default new PushNotificationService();`,
+        },
+      },
+      createdAt: new Date('2024-01-19T15:00:00'),
+      step: '实现移动端集成',
+    },
+    {
+      id: 'conv-4-7',
+      taskId: '4',
+      role: 'assistant',
+      content: '推送功能测试完成，功能正常',
+      structuredContent: {
+        type: 'analysis',
+        analysis: [
+          { label: '即时推送', value: '✅ 测试通过，延迟<2秒', type: 'success' },
+          { label: '离线推送', value: '✅ 测试通过，能正常接收', type: 'success' },
+          { label: 'iOS推送', value: '✅ APNs集成正常', type: 'success' },
+          { label: 'Android推送', value: '✅ FCM集成正常', type: 'success' },
+        ],
+      },
+      createdAt: new Date('2024-01-19T15:30:00'),
+      step: '功能测试',
+    },
+    {
+      id: 'conv-4-8',
+      taskId: '4',
+      role: 'assistant',
+      content: '✅ 所有任务已完成！消息推送功能已上线，代码已提交并创建MR，等待Code Review',
+      createdAt: new Date('2024-01-19T16:00:00'),
+      step: '任务完成',
+    },
+  ],
 };
 // Mock 交付报告数据 - 按任务ID组织
 const mockReports: Record<string, DeliveryReport> = {
