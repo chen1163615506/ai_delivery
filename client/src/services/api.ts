@@ -685,10 +685,10 @@ export const VirtualScroll: React.FC<{ lines: string[] }> = ({ lines }) => {
       step: '完成',
     },
   ],
-  'task-3': [
+  '3': [
     {
       id: 'conv-9',
-      taskId: 'task-3',
+      taskId: '3',
       role: 'user',
       content: '添加AI需求分析功能，基于用户输入的需求描述，自动分析需求并生成任务列表',
       createdAt: new Date('2024-01-18T10:00:00'),
@@ -696,7 +696,7 @@ export const VirtualScroll: React.FC<{ lines: string[] }> = ({ lines }) => {
     },
     {
       id: 'conv-10',
-      taskId: 'task-3',
+      taskId: '3',
       role: 'assistant',
       content: '收到需求，正在分析项目结构和技术方案...',
       structuredContent: {
@@ -713,7 +713,7 @@ export const VirtualScroll: React.FC<{ lines: string[] }> = ({ lines }) => {
     },
     {
       id: 'conv-11',
-      taskId: 'task-3',
+      taskId: '3',
       role: 'assistant',
       content: '分析完成，需要修改以下Git仓库：',
       structuredContent: {
@@ -746,7 +746,7 @@ export const VirtualScroll: React.FC<{ lines: string[] }> = ({ lines }) => {
     },
     {
       id: 'conv-12',
-      taskId: 'task-3',
+      taskId: '3',
       role: 'assistant',
       content: '正在实施开发任务...',
       structuredContent: {
@@ -765,7 +765,7 @@ export const VirtualScroll: React.FC<{ lines: string[] }> = ({ lines }) => {
     },
     {
       id: 'conv-13',
-      taskId: 'task-3',
+      taskId: '3',
       role: 'assistant',
       content: '正在开发前端页面...',
       structuredContent: {
@@ -873,9 +873,8 @@ if (true) {
     (error) => {
       // 如果是网络错误或超时，返回 Mock 数据
       // 捕获所有错误并返回 Mock 数据
-if (true) {
-        const url = error.config.url;
 
+      const url = error.config.url;
         if (url?.includes('/projects')) {
           return Promise.resolve({
             data: { success: true, data: mockProjects },
@@ -931,7 +930,6 @@ if (true) {
             });
           }
         }
-      }
 
       return Promise.reject(error);
     }
