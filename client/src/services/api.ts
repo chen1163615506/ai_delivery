@@ -140,54 +140,647 @@ const mockPendingRequirements: PendingRequirement[] = [
   },
 ];
 
-// Mock 会话数据 - 按任务ID组织
+
+// Mock 会话数据 - 从原始后端恢复
 const mockConversations: Record<string, Conversation[]> = {
-  '1': [
+  'task-1': [
     {
       id: 'conv-1',
-      taskId: '1',
-      role: 'assistant',
-      content: '开始分析需求：实现用户认证功能',
-      step: '需求分析',
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
+      taskId: 'task-1',
+      role: 'user',
+      content: '请实现用户登录功能，包括用户名密码登录和第三方登录（GitHub、Google）',
+      createdAt: new Date('2024-01-15T10:00:00'),
+      step: '需求提交',
     },
     {
       id: 'conv-2',
-      taskId: '1',
+      taskId: 'task-1',
       role: 'assistant',
-      content: '正在设计数据库表结构...',
-      step: '数据库设计',
-      createdAt: new Date(Date.now() - 86000000).toISOString(),
+      content: '收到需求，开始分析项目结构和技术方案...',
+      structuredContent: {
+        type: 'analysis',
+        analysis: [
+          { label: '项目', value: 'Moma管理后台系统', type: 'info' },
+          { label: '涉及仓库', value: 'moma-frontend, moma-backend', type: 'info' },
+          { label: '预计工作量', value: '4-6小时', type: 'warning' },
+          { label: '风险评估', value: '中等', type: 'warning' },
+        ],
+      },
+      createdAt: new Date('2024-01-15T10:01:00'),
+      step: '需求分析',
     },
     {
       id: 'conv-3',
-      taskId: '1',
+      taskId: 'task-1',
       role: 'assistant',
-      content: '实现用户注册和登录接口',
-      step: '代码实现',
-      createdAt: new Date(Date.now() - 85000000).toISOString(),
+      content: '基于项目知识库分析，需要修改以下Git仓库：',
+      structuredContent: {
+        type: 'tree',
+        tree: [
+          {
+            key: 'moma-frontend',
+            title: 'moma-frontend',
+            icon: 'github',
+            children: [
+              { key: 'login-page', title: '创建登录页面组件', status: 'pending' },
+              { key: 'auth-service', title: '添加认证服务API调用', status: 'pending' },
+              { key: 'oauth-components', title: '实现第三方登录组件', status: 'pending' },
+              { key: 'route-guard', title: '配置路由守卫', status: 'pending' },
+            ],
+          },
+          {
+            key: 'moma-backend',
+            title: 'moma-backend',
+            icon: 'github',
+            children: [
+              { key: 'auth-controller', title: '实现登录控制器', status: 'pending' },
+              { key: 'jwt-middleware', title: '添加JWT中间件', status: 'pending' },
+              { key: 'oauth-integration', title: '集成GitHub/Google OAuth', status: 'pending' },
+              { key: 'user-model', title: '扩展用户模型', status: 'pending' },
+            ],
+          },
+        ],
+      },
+      createdAt: new Date('2024-01-15T10:02:00'),
+      step: 'Git仓库分析',
     },
-  ],
-  '2': [
     {
       id: 'conv-4',
-      taskId: '2',
+      taskId: 'task-1',
       role: 'assistant',
-      content: '开始分析支付功能需求',
-      step: '需求分析',
-      createdAt: new Date(Date.now() - 7200000).toISOString(),
+      content: '制定实施计划，以下是详细的任务清单（点击展开查看具体文件和代码）：',
+      structuredContent: {
+        type: 'todo',
+        todos: [
+          {
+            id: 'todo-1',
+            content: '前端：创建登录页面UI',
+            status: 'completed',
+            type: 'task',
+            children: [
+              {
+                id: 'todo-1-repo',
+                content: 'moma-frontend',
+                status: 'completed',
+                type: 'repo',
+                children: [
+                  {
+                    id: 'todo-1-file-1',
+                    content: 'src/pages/LoginPage.tsx',
+                    status: 'completed',
+                    type: 'file',
+                    children: [
+                      {
+                        id: 'todo-1-code-1',
+                        content: '登录页面组件代码',
+                        status: 'completed',
+                        type: 'code',
+                        code: {
+                          language: 'typescript',
+                          content: `import React, { useState } from 'react';
+import { Form, Input, Button, Divider } from 'antd';
+import { UserOutlined, LockOutlined, GithubOutlined, GoogleOutlined } from '@ant-design/icons';
+
+const LoginPage: React.FC = () => {
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (values: any) => {
+    setLoading(true);
+    // 登录逻辑
+  };
+
+  return (
+    <div className="login-container">
+      <Form onFinish={handleLogin}>
+        <Form.Item name="username" rules={[{ required: true }]}>
+          <Input prefix={<UserOutlined />} placeholder="用户名" />
+        </Form.Item>
+        <Form.Item name="password" rules={[{ required: true }]}>
+          <Input.Password prefix={<LockOutlined />} placeholder="密码" />
+        </Form.Item>
+        <Button type="primary" htmlType="submit" loading={loading} block>
+          登录
+        </Button>
+        <Divider>或</Divider>
+        <Button icon={<GithubOutlined />} block>GitHub登录</Button>
+        <Button icon={<GoogleOutlined />} block>Google登录</Button>
+      </Form>
+    </div>
+  );
+};
+
+export default LoginPage;`
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    id: 'todo-1-file-2',
+                    content: 'src/services/auth.ts',
+                    status: 'completed',
+                    type: 'file',
+                    children: [
+                      {
+                        id: 'todo-1-code-2',
+                        content: '认证API调用',
+                        status: 'completed',
+                        type: 'code',
+                        code: {
+                          language: 'typescript',
+                          content: `export const authApi = {
+  login: (credentials: { username: string; password: string }) =>
+    api.post('/auth/login', credentials),
+  logout: () => api.post('/auth/logout'),
+  loginWithGithub: (code: string) =>
+    api.post('/auth/github', { code }),
+  loginWithGoogle: (token: string) =>
+    api.post('/auth/google', { token }),
+};`
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            id: 'todo-2',
+            content: '后端：实现登录API接口',
+            status: 'completed',
+            type: 'task',
+            children: [
+              {
+                id: 'todo-2-repo',
+                content: 'moma-backend',
+                status: 'completed',
+                type: 'repo',
+                children: [
+                  {
+                    id: 'todo-2-file-1',
+                    content: 'src/controllers/auth.controller.ts',
+                    status: 'completed',
+                    type: 'file',
+                    children: [
+                      {
+                        id: 'todo-2-code-1',
+                        content: '登录控制器',
+                        status: 'completed',
+                        type: 'code',
+                        code: {
+                          language: 'typescript',
+                          content: `import { Request, Response } from 'express';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { User } from '../models/user.model';
+
+export const login = async (req: Request, res: Response) => {
+  const { username, password } = req.body;
+
+  const user = await User.findOne({ where: { username } });
+  if (!user) {
+    return res.status(401).json({ error: '用户名或密码错误' });
+  }
+
+  const isValid = await bcrypt.compare(password, user.password);
+  if (!isValid) {
+    return res.status(401).json({ error: '用户名或密码错误' });
+  }
+
+  const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+    expiresIn: '7d'
+  });
+
+  res.json({ token, user: { id: user.id, username: user.username } });
+};`
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    id: 'todo-2-file-2',
+                    content: 'src/middleware/auth.middleware.ts',
+                    status: 'completed',
+                    type: 'file',
+                    children: [
+                      {
+                        id: 'todo-2-code-2',
+                        content: 'JWT认证中间件',
+                        status: 'completed',
+                        type: 'code',
+                        code: {
+                          language: 'typescript',
+                          content: `import jwt from 'jsonwebtoken';
+
+export const authMiddleware = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: '未授权' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(401).json({ error: 'Token无效' });
+  }
+};`
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            id: 'todo-3',
+            content: '数据库：扩展用户表结构',
+            status: 'completed',
+            type: 'task',
+            children: [
+              {
+                id: 'todo-3-repo',
+                content: 'moma-backend',
+                status: 'completed',
+                type: 'repo',
+                children: [
+                  {
+                    id: 'todo-3-file-1',
+                    content: 'migrations/add_oauth_fields.sql',
+                    status: 'completed',
+                    type: 'file',
+                    children: [
+                      {
+                        id: 'todo-3-code-1',
+                        content: 'DDL迁移脚本',
+                        status: 'completed',
+                        type: 'code',
+                        code: {
+                          language: 'sql',
+                          content: `-- 添加第三方登录字段
+ALTER TABLE users
+ADD COLUMN github_id VARCHAR(255),
+ADD COLUMN google_id VARCHAR(255),
+ADD COLUMN avatar_url VARCHAR(500),
+ADD COLUMN provider VARCHAR(50);
+
+-- 创建索引
+CREATE INDEX idx_users_github_id ON users(github_id);
+CREATE INDEX idx_users_google_id ON users(google_id);`
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            id: 'todo-4',
+            content: '测试：编写单元测试',
+            status: 'completed',
+            type: 'task'
+          },
+          {
+            id: 'todo-5',
+            content: '文档：更新API文档',
+            status: 'completed',
+            type: 'task'
+          }
+        ],
+      },
+      createdAt: new Date('2024-01-15T10:03:00'),
+      step: '任务规划与执行',
     },
     {
       id: 'conv-5',
-      taskId: '2',
+      taskId: 'task-1',
       role: 'assistant',
-      content: '正在集成支付宝 SDK...',
-      step: '代码实现',
-      createdAt: new Date(Date.now() - 3600000).toISOString(),
+      content: '✅ 所有任务已完成！正在生成交付报告...',
+      createdAt: new Date('2024-01-15T11:25:00'),
+      step: '任务完成',
+    },
+  ],
+  'task-2': [
+    {
+      id: 'conv-5',
+      taskId: 'task-2',
+      role: 'user',
+      content: '代码编辑器在打开大文件时很卡，请优化性能',
+      createdAt: new Date('2024-01-17T09:00:00'),
+      step: '需求提交',
+    },
+    {
+      id: 'conv-6',
+      taskId: 'task-2',
+      role: 'assistant',
+      content: '开始性能分析...',
+      structuredContent: {
+        type: 'analysis',
+        analysis: [
+          { label: '问题', value: '大文件加载卡顿', type: 'error' },
+          { label: '影响范围', value: '代码编辑器模块', type: 'warning' },
+          { label: '性能瓶颈', value: '文件一次性加载、语法高亮、无虚拟滚动', type: 'error' },
+        ],
+      },
+      createdAt: new Date('2024-01-17T09:05:00'),
+      step: '问题分析',
+    },
+    {
+      id: 'conv-7',
+      taskId: 'task-2',
+      role: 'assistant',
+      content: '制定优化方案并开始实施...',
+      structuredContent: {
+        type: 'todo',
+        todos: [
+          {
+            id: 'todo-10',
+            content: '实现文件分块加载',
+            status: 'completed',
+            children: [
+              {
+                id: 'todo-10-1',
+                content: 'editor-frontend',
+                status: 'completed',
+                type: 'repo',
+                children: [
+                  {
+                    id: 'todo-10-file-1',
+                    content: 'src/components/CodeEditor/FileLoader.tsx',
+                    status: 'completed',
+                    type: 'file',
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            id: 'todo-11',
+            content: '优化语法高亮算法',
+            status: 'completed',
+            children: [
+              {
+                id: 'todo-11-1',
+                content: 'editor-frontend',
+                status: 'completed',
+                type: 'repo',
+                children: [
+                  {
+                    id: 'todo-11-file-1',
+                    content: 'src/utils/syntax-highlighter.ts',
+                    status: 'completed',
+                    type: 'file',
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            id: 'todo-12',
+            content: '添加虚拟滚动',
+            status: 'completed',
+            children: [
+              {
+                id: 'todo-12-1',
+                content: 'editor-frontend',
+                status: 'completed',
+                type: 'repo',
+                children: [
+                  {
+                    id: 'todo-12-file-1',
+                    content: 'src/components/CodeEditor/VirtualScroll.tsx',
+                    status: 'completed',
+                    type: 'file',
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            id: 'todo-13',
+            content: '性能测试和对比',
+            status: 'completed'
+          },
+        ],
+      },
+      createdAt: new Date('2024-01-17T09:10:00'),
+      step: '优化方案',
+    },
+    {
+      id: 'conv-8',
+      taskId: 'task-2',
+      role: 'assistant',
+      content: '已完成文件分块加载功能的实现',
+      structuredContent: {
+        type: 'code',
+        code: {
+          language: 'typescript',
+          fileName: 'src/components/CodeEditor/FileLoader.tsx',
+          content: `import React, { useState, useEffect } from 'react';
+
+const CHUNK_SIZE = 10000; // 每次加载10000行
+
+export const FileLoader: React.FC<{ filePath: string }> = ({ filePath }) => {
+  const [chunks, setChunks] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const loadChunk = async (offset: number) => {
+    setLoading(true);
+    const response = await fetch(\`/api/files/\${filePath}?offset=\${offset}&limit=\${CHUNK_SIZE}\`);
+    const data = await response.text();
+    setChunks(prev => [...prev, data]);
+    setLoading(false);
+  };
+
+  return <div>{/* 渲染代码 */}</div>;
+};`,
+        },
+      },
+      createdAt: new Date('2024-01-17T09:30:00'),
+      step: '实现分块加载',
+    },
+    {
+      id: 'conv-9',
+      taskId: 'task-2',
+      role: 'assistant',
+      content: '已优化语法高亮算法，使用Web Worker处理',
+      structuredContent: {
+        type: 'code',
+        code: {
+          language: 'typescript',
+          fileName: 'src/utils/syntax-highlighter.ts',
+          content: `// 使用Web Worker进行语法高亮，避免阻塞主线程
+const worker = new Worker('/workers/syntax-worker.js');
+
+export const highlightCode = (code: string, language: string): Promise<string> => {
+  return new Promise((resolve) => {
+    worker.postMessage({ code, language });
+    worker.onmessage = (e) => resolve(e.data);
+  });
+};`,
+        },
+      },
+      createdAt: new Date('2024-01-17T10:00:00'),
+      step: '优化语法高亮',
+    },
+    {
+      id: 'conv-10',
+      taskId: 'task-2',
+      role: 'assistant',
+      content: '已添加虚拟滚动功能',
+      structuredContent: {
+        type: 'code',
+        code: {
+          language: 'typescript',
+          fileName: 'src/components/CodeEditor/VirtualScroll.tsx',
+          content: `import React from 'react';
+import { FixedSizeList } from 'react-window';
+
+export const VirtualScroll: React.FC<{ lines: string[] }> = ({ lines }) => {
+  return (
+    <FixedSizeList
+      height={600}
+      itemCount={lines.length}
+      itemSize={20}
+      width="100%"
+    >
+      {({ index, style }) => (
+        <div style={style}>{lines[index]}</div>
+      )}
+    </FixedSizeList>
+  );
+};`,
+        },
+      },
+      createdAt: new Date('2024-01-17T10:30:00'),
+      step: '添加虚拟滚动',
+    },
+    {
+      id: 'conv-11',
+      taskId: 'task-2',
+      role: 'assistant',
+      content: '性能测试完成，优化效果显著',
+      structuredContent: {
+        type: 'analysis',
+        analysis: [
+          { label: '优化前', value: '打开100MB文件耗时: 15s，内存占用: 800MB', type: 'error' },
+          { label: '优化后', value: '打开100MB文件耗时: 2s，内存占用: 150MB', type: 'success' },
+          { label: '性能提升', value: '加载速度提升7.5倍，内存占用降低81%', type: 'success' },
+          { label: 'FPS', value: '从15fps提升至60fps', type: 'success' },
+        ],
+      },
+      createdAt: new Date('2024-01-17T11:00:00'),
+      step: '性能测试',
+    },
+    {
+      id: 'conv-12',
+      taskId: 'task-2',
+      role: 'assistant',
+      content: '✅ 优化任务已全部完成，代码已提交并创建MR，等待Code Review',
+      createdAt: new Date('2024-01-17T11:30:00'),
+      step: '完成',
+    },
+  ],
+  'task-3': [
+    {
+      id: 'conv-9',
+      taskId: 'task-3',
+      role: 'user',
+      content: '添加AI需求分析功能，基于用户输入的需求描述，自动分析需求并生成任务列表',
+      createdAt: new Date('2024-01-18T10:00:00'),
+      step: '需求提交',
+    },
+    {
+      id: 'conv-10',
+      taskId: 'task-3',
+      role: 'assistant',
+      content: '收到需求，正在分析项目结构和技术方案...',
+      structuredContent: {
+        type: 'analysis',
+        analysis: [
+          { label: '项目', value: 'AI交付平台', type: 'info' },
+          { label: '涉及仓库', value: 'platform-frontend, platform-backend', type: 'info' },
+          { label: '预计工作量', value: '6-8小时', type: 'warning' },
+          { label: '技术栈', value: 'React + TypeScript + OpenAI API', type: 'info' },
+        ],
+      },
+      createdAt: new Date('2024-01-18T10:01:00'),
+      step: '需求分析',
+    },
+    {
+      id: 'conv-11',
+      taskId: 'task-3',
+      role: 'assistant',
+      content: '分析完成，需要修改以下Git仓库：',
+      structuredContent: {
+        type: 'tree',
+        tree: [
+          {
+            key: 'platform-frontend',
+            title: 'platform-frontend',
+            icon: 'github',
+            children: [
+              { key: 'ai-analysis-page', title: '创建AI需求分析页面', status: 'in_progress' },
+              { key: 'analysis-form', title: '实现需求输入表单', status: 'in_progress' },
+              { key: 'result-display', title: '展示分析结果组件', status: 'pending' },
+            ],
+          },
+          {
+            key: 'platform-backend',
+            title: 'platform-backend',
+            icon: 'github',
+            children: [
+              { key: 'ai-service', title: '集成OpenAI API服务', status: 'pending' },
+              { key: 'analysis-controller', title: '实现需求分析控制器', status: 'pending' },
+              { key: 'prompt-templates', title: '设计AI提示词模板', status: 'pending' },
+            ],
+          },
+        ],
+      },
+      createdAt: new Date('2024-01-18T10:05:00'),
+      step: 'Git仓库分析',
+    },
+    {
+      id: 'conv-12',
+      taskId: 'task-3',
+      role: 'assistant',
+      content: '正在实施开发任务...',
+      structuredContent: {
+        type: 'todo',
+        todos: [
+          { id: 'todo-14', content: '前端：创建AI需求分析页面', status: 'in_progress' },
+          { id: 'todo-15', content: '前端：实现需求输入表单', status: 'in_progress' },
+          { id: 'todo-16', content: '后端：集成OpenAI API服务', status: 'pending' },
+          { id: 'todo-17', content: '后端：实现需求分析控制器', status: 'pending' },
+          { id: 'todo-18', content: '设计AI提示词模板', status: 'pending' },
+          { id: 'todo-19', content: '展示分析结果组件', status: 'pending' },
+        ],
+      },
+      createdAt: new Date('2024-01-18T10:10:00'),
+      step: '开发计划',
+    },
+    {
+      id: 'conv-13',
+      taskId: 'task-3',
+      role: 'assistant',
+      content: '正在开发前端页面...',
+      structuredContent: {
+        type: 'progress',
+        progress: {
+          current: 2,
+          total: 6,
+          message: '正在实现需求输入表单组件',
+        },
+      },
+      createdAt: new Date('2024-01-18T10:30:00'),
+      step: '执行开发',
     },
   ],
 };
-
 // Mock 交付报告数据 - 按任务ID组织
 const mockReports: Record<string, DeliveryReport> = {
   '1': {
