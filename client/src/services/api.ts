@@ -47,6 +47,10 @@ const mockTasks: Task[] = [
     createdBy: 'user1',
     createdAt: new Date(Date.now() - 86400000).toISOString(),
     updatedAt: new Date().toISOString(),
+    gitRepos: [
+      { id: '1-1', gitRepoId: 'repo-1', gitRepoName: 'ai-delivery-backend', baseBranch: 'main' },
+      { id: '1-2', gitRepoId: 'repo-2', gitRepoName: 'ai-delivery-frontend', baseBranch: 'main' },
+    ],
   },
   {
     id: '2',
@@ -57,6 +61,9 @@ const mockTasks: Task[] = [
     createdBy: 'user1',
     createdAt: new Date(Date.now() - 7200000).toISOString(),
     updatedAt: new Date().toISOString(),
+    gitRepos: [
+      { id: '2-1', gitRepoId: 'repo-1', gitRepoName: 'ai-delivery-backend', baseBranch: 'develop' },
+    ],
   },
   {
     id: '3',
@@ -67,6 +74,9 @@ const mockTasks: Task[] = [
     createdBy: 'user2',
     createdAt: new Date(Date.now() - 3600000).toISOString(),
     updatedAt: new Date().toISOString(),
+    gitRepos: [
+      { id: '3-1', gitRepoId: 'repo-3', gitRepoName: 'codelink-engine', baseBranch: 'main' },
+    ],
   },
   {
     id: '4',
@@ -77,6 +87,10 @@ const mockTasks: Task[] = [
     createdBy: 'user3',
     createdAt: new Date(Date.now() - 1800000).toISOString(),
     updatedAt: new Date().toISOString(),
+    gitRepos: [
+      { id: '4-1', gitRepoId: 'repo-4', gitRepoName: 'moma-backend', baseBranch: 'master' },
+      { id: '4-2', gitRepoId: 'repo-5', gitRepoName: 'moma-mobile', baseBranch: 'master' },
+    ],
   },
 ];
 
@@ -1725,6 +1739,51 @@ export default new PushNotificationService();`,
   },
 };
 
+// Mock Git仓库数据
+const mockGitRepos: Record<string, GitRepo[]> = {
+  '1': [
+    {
+      id: 'repo-1',
+      projectId: '1',
+      name: 'ai-delivery-backend',
+      url: 'https://github.com/example/ai-delivery-backend',
+      description: '后端服务',
+    },
+    {
+      id: 'repo-2',
+      projectId: '1',
+      name: 'ai-delivery-frontend',
+      url: 'https://github.com/example/ai-delivery-frontend',
+      description: '前端应用',
+    },
+  ],
+  '2': [
+    {
+      id: 'repo-3',
+      projectId: '2',
+      name: 'codelink-engine',
+      url: 'https://github.com/example/codelink-engine',
+      description: 'AI引擎',
+    },
+  ],
+  '3': [
+    {
+      id: 'repo-4',
+      projectId: '3',
+      name: 'moma-backend',
+      url: 'https://github.com/example/moma-backend',
+      description: '后端服务',
+    },
+    {
+      id: 'repo-5',
+      projectId: '3',
+      name: 'moma-mobile',
+      url: 'https://github.com/example/moma-mobile',
+      description: '移动应用',
+    },
+  ],
+};
+
 // Mock数据适配器 - 直接返回mock数据而不发送真实请求
 const mockAdapter = (config: any) => {
   return new Promise((resolve) => {
@@ -1738,6 +1797,19 @@ const mockAdapter = (config: any) => {
       } catch (e) {
         console.error('Failed to parse URL:', url);
       }
+    }
+
+    // 项目Git仓库列表
+    if (url?.match(/\/projects\/\w+\/repos$/) && config.method === 'get') {
+      const projectId = url.split('/')[2];
+      const repos = mockGitRepos[projectId] || [];
+      return resolve({
+        data: { success: true, data: repos },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config,
+      });
     }
 
     // 项目列表
@@ -1815,6 +1887,30 @@ const mockAdapter = (config: any) => {
           config,
         });
       }
+    }
+
+    // 创建任务 POST /tasks
+    if (url?.includes('/tasks') && config.method === 'post' && !url.includes('/conversations')) {
+      const requestData = typeof config.data === 'string' ? JSON.parse(config.data) : config.data;
+      const newTask: Task = {
+        id: String(mockTasks.length + 1),
+        projectId: requestData.projectId,
+        title: requestData.title,
+        description: requestData.description,
+        status: 'in_progress',
+        createdBy: requestData.createdBy,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        gitRepos: requestData.gitRepos || [],
+      };
+      mockTasks.push(newTask);
+      return resolve({
+        data: { success: true, data: newTask },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config,
+      });
     }
 
     // 任务列表 /tasks

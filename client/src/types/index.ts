@@ -41,6 +41,15 @@ export interface Task {
   createdAt: Date | string;
   updatedAt: Date | string;
   completedAt?: Date | string | null;
+  gitRepos?: TaskGitRepo[]; // 关联的git仓库和分支
+}
+
+// 任务关联的Git仓库配置
+export interface TaskGitRepo {
+  id: string;
+  gitRepoId: string; // 关联的GitRepo ID
+  gitRepoName: string; // 仓库名称
+  baseBranch: string; // 基准分支
 }
 
 // 待下发任务(从需求平台拉取的任务)
