@@ -60,14 +60,16 @@ const mockPendingRequirements: PendingRequirement[] = [
 ];
 
 // 添加响应拦截器，在生产环境返回 Mock 数据
-if (isProduction) {
+// 始终使用 Mock 数据拦截器
+if (true) {
   api.interceptors.response.use(
     (response) => response,
     (error) => {
       // 如果是网络错误或超时，返回 Mock 数据
-      if (error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED') {
+      // 捕获所有错误并返回 Mock 数据
+if (true) {
         const url = error.config.url;
-        
+
         if (url?.includes('/projects')) {
           return Promise.resolve({
             data: { success: true, data: mockProjects },
@@ -77,7 +79,7 @@ if (isProduction) {
             config: error.config,
           });
         }
-        
+
         if (url?.includes('/tasks/pending-requirements')) {
           return Promise.resolve({
             data: { success: true, data: mockPendingRequirements },
@@ -87,7 +89,7 @@ if (isProduction) {
             config: error.config,
           });
         }
-        
+
         if (url?.includes('/tasks') && !url.includes('/conversations') && !url.includes('/report')) {
           return Promise.resolve({
             data: { success: true, data: mockTasks },
@@ -97,7 +99,7 @@ if (isProduction) {
             config: error.config,
           });
         }
-        
+
         if (url?.includes('/conversations')) {
           return Promise.resolve({
             data: { success: true, data: [] },
@@ -108,7 +110,7 @@ if (isProduction) {
           });
         }
       }
-      
+
       return Promise.reject(error);
     }
   );
@@ -167,3 +169,4 @@ export const taskApi = {
 };
 
 export default api;
+
