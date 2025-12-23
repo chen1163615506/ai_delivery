@@ -10,12 +10,10 @@ import {
   Button,
   Descriptions,
   Collapse,
-  Alert,
   Space,
   Divider,
   Statistic,
   Progress,
-  Anchor,
 } from 'antd';
 import {
   ClockCircleOutlined,
@@ -39,7 +37,6 @@ import type { Task, Conversation, DeliveryReport, TreeNode as TreeNodeType, Todo
 
 const { Title, Text, Paragraph } = Typography;
 const { Panel } = Collapse;
-const { Link } = Anchor;
 
 const TaskDetailPage = () => {
   const { taskId } = useParams<{ taskId: string }>();
@@ -777,7 +774,7 @@ const TaskDetailPage = () => {
                 </Descriptions.Item>
               </Descriptions>
 
-              <Divider >Git仓库与MR</Divider>
+              <Divider orientation={"left" as const}>Git仓库与MR</Divider>
               {report.mergeRequests.map((mr) => (
                 <div key={mr.id} style={{ marginBottom: 12 }}>
                   <Space wrap>
@@ -996,3 +993,6 @@ const TaskDetailPage = () => {
 };
 
 export default TaskDetailPage;
+
+
+
