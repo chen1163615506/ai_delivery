@@ -166,7 +166,7 @@ export interface DeliveryReport {
   id: string;
   taskId: string;
   taskTitle: string; // 需求名称
-  requirementStatus: 'completed' | 'ai_completed'; // 需求状态：completed-已完成（已合并），ai_completed-AI完成（待确认）
+  requirementStatus: 'completed' | 'ai_completed' | 'ai_in_progress'; // 需求状态：completed-已完成（已合并），ai_completed-AI完成（待确认），ai_in_progress-AI进行中
   tokenConsumed?: number;
   requirementUrl?: string; // 需求链接
   impactAnalysis: ImpactAnalysis[]; // 变更影响面分析
@@ -177,3 +177,4 @@ export interface DeliveryReport {
   databaseChanges: DatabaseChange[];
   configChanges: ConfigChange[];
 }
+
