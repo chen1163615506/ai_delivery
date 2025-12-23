@@ -14,6 +14,7 @@ import {
   Divider,
   Statistic,
   Progress,
+  Anchor,
 } from 'antd';
 import {
   ClockCircleOutlined,
@@ -774,7 +775,7 @@ const TaskDetailPage = () => {
                 </Descriptions.Item>
               </Descriptions>
 
-              <Divider orientation={"left" as const}>Git仓库与MR</Divider>
+              <Divider >Git仓库与MR</Divider>
               {report.mergeRequests.map((mr) => (
                 <div key={mr.id} style={{ marginBottom: 12 }}>
                   <Space wrap>
@@ -993,6 +994,7 @@ const TaskDetailPage = () => {
 };
 
 export default TaskDetailPage;
+
 
 
 
