@@ -868,7 +868,7 @@ const mockReports: Record<string, DeliveryReport> = {
     taskId: '2',
     taskTitle: '添加支付功能',
     requirementUrl: 'https://example.com/req/payment',
-    requirementStatus: 'ai_completed',
+    requirementStatus: 'ai_in_progress',
     tokenConsumed: 89000,
     mergeRequests: [
       {
@@ -913,6 +913,7 @@ const mockReports: Record<string, DeliveryReport> = {
         createdAt: new Date(Date.now() - 3600000).toISOString(),
         content: `export class PaymentService {
   async createAlipayOrder(orderId: string, amount: number) {
+    // 创建支付宝订单
     const alipayClient = new AlipayClient(config);
     const result = await alipayClient.createOrder({
       orderId,
@@ -924,6 +925,7 @@ const mockReports: Record<string, DeliveryReport> = {
   }
   
   async createWechatOrder(orderId: string, amount: number) {
+    // 创建微信支付订单
     const wechatClient = new WechatPayClient(config);
     const result = await wechatClient.createOrder({
       orderId,
@@ -935,6 +937,7 @@ const mockReports: Record<string, DeliveryReport> = {
   }
   
   async handleCallback(provider: string, data: any) {
+    // 处理支付回调
     const order = await Order.findByPaymentId(data.orderId);
     order.status = 'paid';
     await order.save();
@@ -958,6 +961,7 @@ const mockReports: Record<string, DeliveryReport> = {
         amount,
         method: paymentMethod
       });
+      // 跳转到支付页面
       window.location.href = result.payUrl;
     } catch (error) {
       message.error('创建支付订单失败');
@@ -973,7 +977,7 @@ const mockReports: Record<string, DeliveryReport> = {
       <Button type="primary" onClick={handlePay}>确认支付</Button>
     </Modal>
   );
-}`,
+};`,
       },
     ],
     databaseChanges: [
@@ -1094,17 +1098,30 @@ const mockReports: Record<string, DeliveryReport> = {
         self.batch_processor = BatchProcessor(max_batch_size=32)
     
     async def complete_code(self, context: str, cursor_pos: int) -> List[Completion]:
+        # 检查缓存
         cache_key = self.get_cache_key(context, cursor_pos)
         if cache_key in self.cache:
             return self.cache[cache_key]
         
+        # 批量处理优化
         result = await self.batch_processor.process(
-            context, cursor_pos, temperature=0.2, top_p=0.95
+            context, 
+            cursor_pos,
+            temperature=0.2,
+            top_p=0.95
         )
         
+        # 后处理和排序
         completions = self.post_process(result)
         self.cache[cache_key] = completions
-        return completions`,
+        
+        return completions
+    
+    def post_process(self, raw_results: List[str]) -> List[Completion]:
+        # 去重、排序、过滤低质量结果
+        unique_results = list(set(raw_results))
+        scored_results = [(r, self.score_completion(r)) for r in unique_results]
+        return sorted(scored_results, key=lambda x: x[1], reverse=True)[:10]`,
       },
       {
         id: 'change-5',
@@ -1119,6 +1136,7 @@ const mockReports: Record<string, DeliveryReport> = {
         self.hit_rate_tracker = HitRateTracker()
     
     def get_cache_key(self, context: str, cursor_pos: int) -> str:
+        # 使用语义哈希而非简单字符串哈希
         semantic_hash = self.compute_semantic_hash(context)
         return f"completion:{semantic_hash}:{cursor_pos}"
     
@@ -1128,7 +1146,14 @@ const mockReports: Record<string, DeliveryReport> = {
             self.hit_rate_tracker.record_hit()
             return json.loads(result)
         self.hit_rate_tracker.record_miss()
-        return None`,
+        return None
+    
+    async def set(self, key: str, value: Any):
+        await self.redis.setex(
+            key, 
+            self.ttl, 
+            json.dumps(value)
+        )`,
       },
     ],
     databaseChanges: [
@@ -1183,50 +1208,326 @@ const mockReports: Record<string, DeliveryReport> = {
     createdAt: new Date(Date.now() - 5400000).toISOString(),
     updatedAt: new Date(Date.now() - 5400000).toISOString(),
   },
+  '4': {
+    id: 'report-4',
+    taskId: '4',
+    taskTitle: '实现消息推送功能',
+    requirementUrl: 'https://example.com/req/push-notification',
+    requirementStatus: 'ai_completed',
+    tokenConsumed: 98000,
+    mergeRequests: [
+      {
+        id: 'mr-5',
+        gitRepoName: 'moma-backend',
+        gitRepoUrl: 'https://github.com/example/moma-backend',
+        mrUrl: 'https://github.com/example/moma-backend/pull/156',
+        status: 'pending_cr',
+        createdAt: new Date(Date.now() - 1800000).toISOString(),
+      },
+      {
+        id: 'mr-6',
+        gitRepoName: 'moma-mobile',
+        gitRepoUrl: 'https://github.com/example/moma-mobile',
+        mrUrl: 'https://github.com/example/moma-mobile/pull/78',
+        status: 'pending_cr',
+        createdAt: new Date(Date.now() - 1800000).toISOString(),
+      },
+    ],
+    impactAnalysis: [
+      {
+        module: '消息推送模块',
+        description: '集成极光推送SDK,实现即时消息和离线消息推送',
+        severity: 'high',
+        upstreamServices: ['极光推送平台', 'APNs', 'FCM'],
+        downstreamServices: ['消息中心', '通知中心', '用户系统'],
+      },
+      {
+        module: '消息存储',
+        description: '新增消息存储和查询功能,支持历史消息查看',
+        severity: 'medium',
+        upstreamServices: [],
+        downstreamServices: ['MongoDB集群', 'Redis缓存'],
+      },
+    ],
+    codeChanges: [
+      {
+        id: 'change-6',
+        gitRepoName: 'moma-backend',
+        filePath: 'src/services/push.service.ts',
+        changeType: 'added',
+        createdAt: new Date(Date.now() - 1800000).toISOString(),
+        content: `import JPush from 'jpush-sdk';
+
+export class PushService {
+  private client: JPush.JPushClient;
+  
+  constructor() {
+    this.client = JPush.buildClient({
+      appKey: process.env.JPUSH_APP_KEY,
+      masterSecret: process.env.JPUSH_MASTER_SECRET,
+      isDebug: process.env.NODE_ENV !== 'production'
+    });
+  }
+  
+  async sendToUser(userId: string, notification: PushNotification) {
+    try {
+      const result = await this.client.push()
+        .setPlatform(JPush.ALL)
+        .setAudience(JPush.alias(userId))
+        .setNotification(notification.title, JPush.ios(notification.body), JPush.android(notification.body))
+        .send();
+      
+      // 保存推送记录
+      await this.savePushRecord({
+        userId,
+        notification,
+        status: 'sent',
+        result
+      });
+      
+      return result;
+    } catch (error) {
+      console.error('Push notification failed:', error);
+      throw error;
+    }
+  }
+  
+  async sendToAll(notification: PushNotification) {
+    return await this.client.push()
+      .setPlatform(JPush.ALL)
+      .setAudience(JPush.ALL)
+      .setNotification(notification.title, JPush.ios(notification.body), JPush.android(notification.body))
+      .send();
+  }
+}`,
+      },
+      {
+        id: 'change-7',
+        gitRepoName: 'moma-backend',
+        filePath: 'src/controllers/message.controller.ts',
+        changeType: 'added',
+        createdAt: new Date(Date.now() - 1800000).toISOString(),
+        content: `export class MessageController {
+  async sendMessage(req: Request, res: Response) {
+    const { userId, title, body, data } = req.body;
+    
+    try {
+      // 保存消息到数据库
+      const message = await Message.create({
+        userId,
+        title,
+        body,
+        data,
+        status: 'pending'
+      });
+      
+      // 发送推送通知
+      await pushService.sendToUser(userId, {
+        title,
+        body,
+        data: { messageId: message.id, ...data }
+      });
+      
+      message.status = 'sent';
+      await message.save();
+      
+      res.json({ success: true, data: message });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+  
+  async getMessages(req: Request, res: Response) {
+    const { userId } = req.params;
+    const messages = await Message.find({ userId }).sort({ createdAt: -1 });
+    res.json({ success: true, data: messages });
+  }
+}`,
+      },
+      {
+        id: 'change-8',
+        gitRepoName: 'moma-mobile',
+        filePath: 'src/services/PushNotificationService.ts',
+        changeType: 'added',
+        createdAt: new Date(Date.now() - 1800000).toISOString(),
+        content: `import JPush from 'jpush-react-native';
+
+class PushNotificationService {
+  init() {
+    JPush.init();
+    
+    // 监听通知
+    JPush.addNotificationListener((notification) => {
+      console.log('Received notification:', notification);
+      this.handleNotification(notification);
+    });
+    
+    // 监听自定义消息
+    JPush.addCustomMessageListener((message) => {
+      console.log('Received custom message:', message);
+      this.handleCustomMessage(message);
+    });
+  }
+  
+  handleNotification(notification: any) {
+    // 处理通知点击
+    if (notification.notificationEventType === 'notificationOpened') {
+      const { messageId } = notification.extras;
+      // 跳转到消息详情页
+      NavigationService.navigate('MessageDetail', { messageId });
+    }
+  }
+  
+  async requestPermission() {
+    const granted = await JPush.requestPermission();
+    return granted;
+  }
+  
+  async getRegistrationId() {
+    return await JPush.getRegistrationID();
+  }
+}
+
+export default new PushNotificationService();`,
+      },
+    ],
+    databaseChanges: [
+      {
+        id: 'db-5',
+        changeType: 'DDL',
+        description: '创建消息表',
+        createdAt: new Date(Date.now() - 1800000).toISOString(),
+        sqlScript: `CREATE TABLE messages (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  title VARCHAR(200) NOT NULL,
+  body TEXT NOT NULL,
+  data JSON,
+  status VARCHAR(20) DEFAULT 'pending',
+  read_at TIMESTAMP NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_user_id (user_id),
+  INDEX idx_status (status),
+  INDEX idx_created_at (created_at)
+);`,
+      },
+      {
+        id: 'db-6',
+        changeType: 'DDL',
+        description: '创建推送记录表',
+        createdAt: new Date(Date.now() - 1800000).toISOString(),
+        sqlScript: `CREATE TABLE push_records (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  message_id BIGINT NOT NULL,
+  user_id BIGINT NOT NULL,
+  platform VARCHAR(20),
+  status VARCHAR(20) DEFAULT 'pending',
+  error_message TEXT,
+  sent_at TIMESTAMP NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (message_id) REFERENCES messages(id),
+  INDEX idx_message_id (message_id),
+  INDEX idx_user_id (user_id)
+);`,
+      },
+    ],
+    configChanges: [
+      {
+        id: 'config-9',
+        configType: 'file',
+        configKey: 'JPUSH_APP_KEY',
+        filePath: '.env',
+        oldValue: '',
+        newValue: 'your-jpush-app-key',
+        createdAt: new Date(Date.now() - 1800000).toISOString(),
+      },
+      {
+        id: 'config-10',
+        configType: 'file',
+        configKey: 'JPUSH_MASTER_SECRET',
+        filePath: '.env',
+        oldValue: '',
+        newValue: 'your-jpush-master-secret',
+        createdAt: new Date(Date.now() - 1800000).toISOString(),
+      },
+    ],
+    createdAt: new Date(Date.now() - 900000).toISOString(),
+    updatedAt: new Date(Date.now() - 900000).toISOString(),
+  },
 };
 
-// 在生产环境使用 Mock 数据适配器
-if (isProduction) {
-  // 使用自定义 adapter 直接返回 mock 数据,不发起真实请求
-  const mockAdapter = (config: any) => {
-    return new Promise((resolve) => {
-      // 模拟网络延迟
-      setTimeout(() => {
-        const url = config.url || '';
-        let responseData;
+// 添加响应拦截器，在生产环境返回 Mock 数据
+// 始终使用 Mock 数据拦截器
+if (true) {
+  api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      // 如果是网络错误或超时，返回 Mock 数据
+      // 捕获所有错误并返回 Mock 数据
 
-        if (url.includes('/projects')) {
-          responseData = { success: true, data: mockProjects };
-        } else if (url.includes('/tasks/pending-requirements')) {
-          responseData = { success: true, data: mockPendingRequirements };
-        } else if (url.includes('/conversations')) {
-          const taskId = url.split('/')[2];
-          const conversations = mockConversations[taskId] || [];
-          responseData = { success: true, data: conversations };
-        } else if (url.includes('/report')) {
-          const taskId = url.split('/')[2];
-          const report = mockReports[taskId];
-          responseData = report ? { success: true, data: report } : { success: false, message: 'Report not found' };
-        } else if (url.includes('/tasks')) {
-          responseData = { success: true, data: mockTasks };
-        } else {
-          responseData = { success: false, message: 'Not found' };
+      const url = error.config.url;
+        if (url?.includes('/projects')) {
+          return Promise.resolve({
+            data: { success: true, data: mockProjects },
+            status: 200,
+            statusText: 'OK',
+            headers: {},
+            config: error.config,
+          });
         }
 
-        resolve({
-          data: responseData,
-          status: 200,
-          statusText: 'OK',
-          headers: {},
-          config,
-        });
-      }, 100);
-    });
-  };
+        if (url?.includes('/tasks/pending-requirements')) {
+          return Promise.resolve({
+            data: { success: true, data: mockPendingRequirements },
+            status: 200,
+            statusText: 'OK',
+            headers: {},
+            config: error.config,
+          });
+        }
 
-  // 设置自定义 adapter
-  api.defaults.adapter = mockAdapter as any;
+        if (url?.includes('/tasks') && !url.includes('/conversations') && !url.includes('/report')) {
+          return Promise.resolve({
+            data: { success: true, data: mockTasks },
+            status: 200,
+            statusText: 'OK',
+            headers: {},
+            config: error.config,
+          });
+        }
+
+        if (url?.includes('/conversations')) {
+          const taskId = url.split('/')[2];
+          const conversations = mockConversations[taskId] || [];
+          return Promise.resolve({
+            data: { success: true, data: conversations },
+            status: 200,
+            statusText: 'OK',
+            headers: {},
+            config: error.config,
+          });
+        }
+
+        if (url?.includes('/report')) {
+          const taskId = url.split('/')[2];
+          const report = mockReports[taskId];
+          if (report) {
+            return Promise.resolve({
+              data: { success: true, data: report },
+              status: 200,
+              statusText: 'OK',
+              headers: {},
+              config: error.config,
+            });
+          }
+        }
+
+      return Promise.reject(error);
+    }
+  );
 }
+
 // 项目相关API
 export const projectApi = {
   getAll: () => api.get<{ success: boolean; data: Project[] }>('/projects'),
@@ -1280,6 +1581,11 @@ export const taskApi = {
 };
 
 export default api;
+
+
+
+
+
 
 
 
