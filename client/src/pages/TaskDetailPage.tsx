@@ -777,7 +777,7 @@ const TaskDetailPage = () => {
                 </Descriptions.Item>
               </Descriptions>
 
-              <Divider orientation="left">Git仓库与MR</Divider>
+              <Divider >Git仓库与MR</Divider>
               {report.mergeRequests.map((mr) => (
                 <div key={mr.id} style={{ marginBottom: 12 }}>
                   <Space wrap>

@@ -162,44 +162,6 @@ const HomePage = () => {
     return acc;
   }, {} as Record<string, Task[]>);
 
-  const collapseItems = projects
-    .filter((project) => tasksByProject[project.id]?.length > 0)
-    .map((project) => ({
-      key: project.id,
-      label: (
-        <Space>
-          <Text strong>{project.name}</Text>
-          <Tag>{tasksByProject[project.id]?.length || 0}个任务</Tag>
-        </Space>
-      ),
-      children: (
-        <List
-          dataSource={tasksByProject[project.id] || []}
-          renderItem={(task) => (
-            <List.Item
-              style={{ cursor: 'pointer' }}
-              onClick={() => handleTaskClick(task.id)}
-              actions={[getStatusTag(task.status)]}
-            >
-              <List.Item.Meta
-                title={task.title}
-                description={
-                  <Space direction="vertical" size="small">
-                    <Text type="secondary" ellipsis style={{ maxWidth: '600px' }}>
-                      {task.description}
-                    </Text>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      创建时间: {new Date(task.createdAt).toLocaleString('zh-CN')}
-                    </Text>
-                  </Space>
-                }
-              />
-            </List.Item>
-          )}
-        />
-      ),
-    }));
-
   return (
     <div
       style={{
@@ -418,6 +380,7 @@ const HomePage = () => {
 };
 
 export default HomePage;
+
 
 
 
