@@ -143,10 +143,10 @@ const mockPendingRequirements: PendingRequirement[] = [
 
 // Mock 会话数据 - 从原始后端恢复
 const mockConversations: Record<string, Conversation[]> = {
-  'task-1': [
+  '1': [
     {
       id: 'conv-1',
-      taskId: 'task-1',
+      taskId: '1',
       role: 'user',
       content: '请实现用户登录功能，包括用户名密码登录和第三方登录（GitHub、Google）',
       createdAt: new Date('2024-01-15T10:00:00'),
@@ -154,7 +154,7 @@ const mockConversations: Record<string, Conversation[]> = {
     },
     {
       id: 'conv-2',
-      taskId: 'task-1',
+      taskId: '1',
       role: 'assistant',
       content: '收到需求，开始分析项目结构和技术方案...',
       structuredContent: {
@@ -171,7 +171,7 @@ const mockConversations: Record<string, Conversation[]> = {
     },
     {
       id: 'conv-3',
-      taskId: 'task-1',
+      taskId: '1',
       role: 'assistant',
       content: '基于项目知识库分析，需要修改以下Git仓库：',
       structuredContent: {
@@ -206,7 +206,7 @@ const mockConversations: Record<string, Conversation[]> = {
     },
     {
       id: 'conv-4',
-      taskId: 'task-1',
+      taskId: '1',
       role: 'assistant',
       content: '制定实施计划，以下是详细的任务清单（点击展开查看具体文件和代码）：',
       structuredContent: {
@@ -457,17 +457,17 @@ CREATE INDEX idx_users_google_id ON users(google_id);`
     },
     {
       id: 'conv-5',
-      taskId: 'task-1',
+      taskId: '1',
       role: 'assistant',
       content: '✅ 所有任务已完成！正在生成交付报告...',
       createdAt: new Date('2024-01-15T11:25:00'),
       step: '任务完成',
     },
   ],
-  'task-2': [
+  '2': [
     {
       id: 'conv-5',
-      taskId: 'task-2',
+      taskId: '2',
       role: 'user',
       content: '代码编辑器在打开大文件时很卡，请优化性能',
       createdAt: new Date('2024-01-17T09:00:00'),
@@ -475,7 +475,7 @@ CREATE INDEX idx_users_google_id ON users(google_id);`
     },
     {
       id: 'conv-6',
-      taskId: 'task-2',
+      taskId: '2',
       role: 'assistant',
       content: '开始性能分析...',
       structuredContent: {
@@ -491,7 +491,7 @@ CREATE INDEX idx_users_google_id ON users(google_id);`
     },
     {
       id: 'conv-7',
-      taskId: 'task-2',
+      taskId: '2',
       role: 'assistant',
       content: '制定优化方案并开始实施...',
       structuredContent: {
@@ -572,7 +572,7 @@ CREATE INDEX idx_users_google_id ON users(google_id);`
     },
     {
       id: 'conv-8',
-      taskId: 'task-2',
+      taskId: '2',
       role: 'assistant',
       content: '已完成文件分块加载功能的实现',
       structuredContent: {
@@ -605,7 +605,7 @@ export const FileLoader: React.FC<{ filePath: string }> = ({ filePath }) => {
     },
     {
       id: 'conv-9',
-      taskId: 'task-2',
+      taskId: '2',
       role: 'assistant',
       content: '已优化语法高亮算法，使用Web Worker处理',
       structuredContent: {
@@ -629,7 +629,7 @@ export const highlightCode = (code: string, language: string): Promise<string> =
     },
     {
       id: 'conv-10',
-      taskId: 'task-2',
+      taskId: '2',
       role: 'assistant',
       content: '已添加虚拟滚动功能',
       structuredContent: {
@@ -661,7 +661,7 @@ export const VirtualScroll: React.FC<{ lines: string[] }> = ({ lines }) => {
     },
     {
       id: 'conv-11',
-      taskId: 'task-2',
+      taskId: '2',
       role: 'assistant',
       content: '性能测试完成，优化效果显著',
       structuredContent: {
@@ -678,7 +678,7 @@ export const VirtualScroll: React.FC<{ lines: string[] }> = ({ lines }) => {
     },
     {
       id: 'conv-12',
-      taskId: 'task-2',
+      taskId: '2',
       role: 'assistant',
       content: '✅ 优化任务已全部完成，代码已提交并创建MR，等待Code Review',
       createdAt: new Date('2024-01-17T11:30:00'),
