@@ -22,6 +22,19 @@ const mockProjects: Project[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
+  {
+    id: '2',
+    name: 'CodeLink',
+    description: '智能代码助手平台',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: '3',
+    name: 'Moma',
+    description: '移动办公平台',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),  },
 ];
 
 const mockTasks: Task[] = [
