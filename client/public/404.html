@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>AI需求交付平台</title>
+  <script>
+    // 单页应用路由重定向
+    // 将当前路径保存到 sessionStorage，然后重定向到首页
+    sessionStorage.setItem('redirect', location.pathname + location.search + location.hash);
+    location.replace(location.origin + '/ai_delivery/');
+  </script>
+</head>
+<body>
+  <div>正在加载...</div>
+</body>
+</html>
