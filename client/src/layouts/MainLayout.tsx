@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Button, List, Typography, Divider, Empty } from 'antd';
+import { Layout, Button, List, Typography, Divider, Empty, Badge } from 'antd';
 import {
   PlusOutlined,
   FolderOutlined,
@@ -10,6 +10,7 @@ import {
   CheckCircleOutlined,
   SyncOutlined,
   CloseCircleOutlined,
+  AppstoreOutlined,
 } from '@ant-design/icons';
 import { taskApi } from '../services/api';
 import type { Task } from '../types';
@@ -21,6 +22,7 @@ const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(false);
+  const [pendingDecisionCount, setPendingDecisionCount] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -40,6 +42,9 @@ const MainLayout = () => {
       setLoading(true);
       const response = await taskApi.getAll();
       setTasks(response.data.data);
+
+      // Mock待决策数量（实际应该从后端API获取）
+      setPendingDecisionCount(3);
     } catch (error) {
       console.error('Failed to load tasks:', error);
     } finally {
@@ -116,6 +121,50 @@ const MainLayout = () => {
           >
             {!collapsed && '新建任务'}
           </Button>
+          <div style={{ position: 'relative', width: '100%', marginBottom: 8 }}>
+            <Button
+              icon={<AppstoreOutlined />}
+              onClick={() => navigate('/my-tasks')}
+              block
+            >
+              {!collapsed && '我的任务'}
+            </Button>
+            {pendingDecisionCount > 0 && !collapsed && (
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                right: 12,
+                transform: 'translateY(-50%)',
+              }}>
+                <Badge
+                  count={pendingDecisionCount}
+                  styles={{
+                    indicator: {
+                      backgroundColor: '#ff4d4f',
+                      boxShadow: '0 0 0 1px #fff',
+                    }
+                  }}
+                />
+              </div>
+            )}
+            {pendingDecisionCount > 0 && collapsed && (
+              <div style={{
+                position: 'absolute',
+                top: 6,
+                right: 6,
+              }}>
+                <Badge
+                  dot
+                  styles={{
+                    indicator: {
+                      backgroundColor: '#ff4d4f',
+                      boxShadow: '0 0 0 1px #fff',
+                    }
+                  }}
+                />
+              </div>
+            )}
+          </div>
           <Button
             icon={<FolderOutlined />}
             onClick={() => navigate('/assets')}
@@ -221,3 +270,5 @@ const MainLayout = () => {
 };
 
 export default MainLayout;
+
+

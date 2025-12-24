@@ -11,14 +11,12 @@ import {
   Space,
   Typography,
   Card,
-  Mentions,
-  Modal,
+  Checkbox,
 } from 'antd';
 import { SendOutlined, PlusOutlined, LinkOutlined, ClockCircleOutlined, GithubOutlined, BranchesOutlined, CloseOutlined } from '@ant-design/icons';
 import { projectApi, taskApi } from '../services/api';
 import type { Project, Task, PendingRequirement, GitRepo, TaskGitRepo } from '../types';
 
-const { TextArea } = Input;
 const { Title, Text } = Typography;
 
 const HomePage = () => {
@@ -34,9 +32,8 @@ const HomePage = () => {
   // Git相关状态
   const [gitRepos, setGitRepos] = useState<GitRepo[]>([]);
   const [selectedGitRepos, setSelectedGitRepos] = useState<TaskGitRepo[]>([]);
-  const [showBranchModal, setShowBranchModal] = useState(false);
-  const [currentSelectingRepo, setCurrentSelectingRepo] = useState<GitRepo | null>(null);
-  const [branchInput, setBranchInput] = useState('');
+  const [tempSelectedGitIds, setTempSelectedGitIds] = useState<string[]>([]); // 临时选中的git id
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   useEffect(() => {
     loadProjects();
@@ -99,41 +96,59 @@ const HomePage = () => {
     }
   };
 
-  // 处理@git选择
-  const handleGitSelect = (option: any) => {
-    const repo = gitRepos.find(r => r.id === option.value);
-    if (repo) {
-      setCurrentSelectingRepo(repo);
-      setShowBranchModal(true);
-      setBranchInput('');
+  // 处理输入框变化，检测@符号
+  const handleRequirementChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setRequirement(value);
+
+    // 检测是否输入了@且项目已选择
+    if (value.endsWith('@') && selectedProject && gitRepos.length > 0) {
+      setDropdownOpen(true);
     }
   };
 
-  // 确认分支选择
-  const handleBranchConfirm = () => {
-    if (!branchInput.trim()) {
-      message.warning('请输入基准分支');
-      return;
-    }
-    if (!currentSelectingRepo) return;
-
-    // 检查是否已经添加过这个仓库
-    if (selectedGitRepos.find(r => r.gitRepoId === currentSelectingRepo.id)) {
-      message.warning('该Git仓库已添加');
-      setShowBranchModal(false);
+  // 确认添加选中的git仓库
+  const handleConfirmGitSelection = () => {
+    if (tempSelectedGitIds.length === 0) {
+      message.warning('请至少选择一个Git仓库');
       return;
     }
 
-    const newGitRepo: TaskGitRepo = {
-      id: `temp-${Date.now()}`,
-      gitRepoId: currentSelectingRepo.id,
-      gitRepoName: currentSelectingRepo.name,
-      baseBranch: branchInput.trim(),
-    };
+    const newRepos: TaskGitRepo[] = [];
+    tempSelectedGitIds.forEach(gitId => {
+      // 检查是否已经添加过
+      if (selectedGitRepos.find(r => r.gitRepoId === gitId)) {
+        return;
+      }
+      const repo = gitRepos.find(r => r.id === gitId);
+      if (repo) {
+        newRepos.push({
+          id: `temp-${Date.now()}-${gitId}`,
+          gitRepoId: repo.id,
+          gitRepoName: repo.name,
+          baseBranch: '',
+        });
+      }
+    });
 
-    setSelectedGitRepos([...selectedGitRepos, newGitRepo]);
-    setShowBranchModal(false);
-    message.success(`已添加 ${currentSelectingRepo.name} (${branchInput})`);
+    if (newRepos.length > 0) {
+      setSelectedGitRepos([...selectedGitRepos, ...newRepos]);
+      message.success(`已添加 ${newRepos.length} 个Git仓库`);
+    }
+
+    // 移除输入框中的@
+    setRequirement(requirement.slice(0, -1));
+
+    // 重置并关闭
+    setTempSelectedGitIds([]);
+    setDropdownOpen(false);
+  };
+
+  // 更新分支名称
+  const handleBranchChange = (gitRepoId: string, branch: string) => {
+    setSelectedGitRepos(selectedGitRepos.map(r =>
+      r.gitRepoId === gitRepoId ? { ...r, baseBranch: branch } : r
+    ));
   };
 
   // 移除已选择的Git仓库
@@ -149,6 +164,15 @@ const HomePage = () => {
     if (!requirement.trim()) {
       message.warning('请输入需求描述');
       return;
+    }
+
+    // 验证所有选择的git仓库都填写了分支
+    if (selectedGitRepos.length > 0) {
+      const emptyBranchRepo = selectedGitRepos.find(r => !r.baseBranch.trim());
+      if (emptyBranchRepo) {
+        message.warning(`请为 ${emptyBranchRepo.gitRepoName} 填写基准分支`);
+        return;
+      }
     }
 
     setLoading(true);
@@ -298,54 +322,178 @@ const HomePage = () => {
               />
             </div>
 
-            {/* 已选择的Git仓库显示 */}
+            {/* 已选择的Git仓库显示 - 每行2个，卡片式，内联输入分支 */}
             {selectedGitRepos.length > 0 && (
-              <div style={{ marginTop: 48, marginBottom: 12 }}>
-                <Space wrap size="small">
-                  {selectedGitRepos.map((repo) => (
-                    <Tag
-                      key={repo.gitRepoId}
-                      color="blue"
-                      closable
-                      onClose={() => handleRemoveGitRepo(repo.gitRepoId)}
-                      style={{ padding: '4px 8px', fontSize: 13 }}
-                      icon={<GithubOutlined />}
-                    >
-                      {repo.gitRepoName}
-                      <BranchesOutlined style={{ margin: '0 4px' }} />
-                      {repo.baseBranch}
-                    </Tag>
-                  ))}
-                </Space>
+              <div style={{ marginTop: 48, marginBottom: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                {selectedGitRepos.map((repo) => (
+                  <div
+                    key={repo.gitRepoId}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 8,
+                      padding: '12px',
+                      background: '#f0f5ff',
+                      borderRadius: 6,
+                      border: '1px solid #adc6ff',
+                      position: 'relative',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <GithubOutlined style={{ color: '#1677ff', fontSize: 16 }} />
+                      <Text strong style={{ fontSize: 13, color: '#1677ff', flex: 1 }}>
+                        {repo.gitRepoName}
+                      </Text>
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<CloseOutlined />}
+                        onClick={() => handleRemoveGitRepo(repo.gitRepoId)}
+                        style={{ position: 'absolute', top: 4, right: 4 }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <BranchesOutlined style={{ color: '#8c8c8c' }} />
+                      <Input
+                        size="small"
+                        placeholder="基准分支 (如: main)"
+                        value={repo.baseBranch}
+                        onChange={(e) => handleBranchChange(repo.gitRepoId, e.target.value)}
+                        style={{ flex: 1 }}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
-            <Mentions
-              style={{
-                marginTop: selectedGitRepos.length > 0 ? 0 : 48,
-                border: '1px solid #e0e0e0',
-                background: '#fafafa',
-                fontSize: '16px',
-                borderRadius: '8px',
-              }}
-              rows={5}
-              placeholder={
-                selectedProject
-                  ? '输入 @git 选择仓库和分支，或直接详细描述您的需求...'
-                  : '请先选择项目...'
-              }
-              value={requirement}
-              onChange={(value) => setRequirement(value)}
-              onSelect={handleGitSelect}
-              disabled={!selectedProject}
-              options={
-                gitRepos.map((repo) => ({
-                  value: repo.id,
-                  label: repo.name,
-                }))
-              }
-              prefix="@git"
-            />
+            <div style={{ position: 'relative', marginTop: selectedGitRepos.length > 0 ? 0 : 48 }}>
+              <Input.TextArea
+                style={{
+                  border: '1px solid #e0e0e0',
+                  background: '#fafafa',
+                  fontSize: '16px',
+                  resize: 'none',
+                  paddingBottom: '60px',
+                  borderRadius: '8px',
+                }}
+                rows={5}
+                placeholder={
+                  selectedProject
+                    ? '输入 @ 选择Git仓库，或直接描述您的需求...'
+                    : '请先选择项目...'
+                }
+                value={requirement}
+                onChange={handleRequirementChange}
+                disabled={!selectedProject}
+              />
+
+              {/* Git仓库选择下拉框 - 在输入@时显示 */}
+              {dropdownOpen && (
+                <>
+                  {/* 遮罩层 */}
+                  <div
+                    style={{
+                      position: 'fixed',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: 'rgba(0, 0, 0, 0.45)',
+                      zIndex: 999,
+                    }}
+                    onClick={() => {
+                      setTempSelectedGitIds([]);
+                      setDropdownOpen(false);
+                      setRequirement(requirement.slice(0, -1));
+                    }}
+                  />
+                  {/* 下拉框 - 使用 absolute 定位,相对于父容器 */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 10,
+                    left: 10,
+                    zIndex: 1000,
+                    background: '#fff',
+                    borderRadius: 8,
+                    boxShadow: '0 6px 16px rgba(0,0,0,0.12)',
+                    padding: '12px',
+                    width: 350,
+                  }}>
+                    <div style={{
+                      marginBottom: 12,
+                      paddingBottom: 8,
+                      borderBottom: '1px solid #f0f0f0',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}>
+                      <Text strong>选择Git仓库</Text>
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        {tempSelectedGitIds.length} 个已选
+                      </Text>
+                    </div>
+                    <Checkbox.Group
+                      style={{ width: '100%' }}
+                      value={tempSelectedGitIds}
+                      onChange={(values) => setTempSelectedGitIds(values as string[])}
+                    >
+                      <Space direction="vertical" style={{ width: '100%' }}>
+                        {gitRepos.map(repo => {
+                          const isAdded = selectedGitRepos.find(r => r.gitRepoId === repo.id);
+                          return (
+                            <Checkbox
+                              key={repo.id}
+                              value={repo.id}
+                              disabled={!!isAdded}
+                              style={{ width: '100%' }}
+                            >
+                              <Space>
+                                <GithubOutlined style={{ color: isAdded ? '#d9d9d9' : '#1677ff' }} />
+                                <Text
+                                  style={{
+                                    color: isAdded ? '#d9d9d9' : '#000',
+                                  }}
+                                >
+                                  {repo.name}
+                                </Text>
+                                {isAdded && <Tag color="success" style={{ fontSize: 11 }}>已添加</Tag>}
+                              </Space>
+                            </Checkbox>
+                          );
+                        })}
+                      </Space>
+                    </Checkbox.Group>
+                    <div style={{
+                      marginTop: 12,
+                      paddingTop: 8,
+                      borderTop: '1px solid #f0f0f0',
+                      display: 'flex',
+                      justifyContent: 'flex-end',
+                      gap: 8,
+                    }}>
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          setTempSelectedGitIds([]);
+                          setDropdownOpen(false);
+                          setRequirement(requirement.slice(0, -1)); // 移除@
+                        }}
+                      >
+                        取消
+                      </Button>
+                      <Button
+                        size="small"
+                        type="primary"
+                        onClick={handleConfirmGitSelection}
+                      >
+                        确认添加
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
 
             <div
               style={{
@@ -474,43 +622,18 @@ const HomePage = () => {
             )}
           </Card>
         </Space>
-
-        {/* 分支选择Modal */}
-        <Modal
-          title={
-            <Space>
-              <GithubOutlined />
-              <span>选择基准分支</span>
-            </Space>
-          }
-          open={showBranchModal}
-          onOk={handleBranchConfirm}
-          onCancel={() => setShowBranchModal(false)}
-          okText="确定"
-          cancelText="取消"
-        >
-          {currentSelectingRepo && (
-            <div>
-              <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
-                为 <Text strong>{currentSelectingRepo.name}</Text> 选择基准分支
-              </Text>
-              <Input
-                prefix={<BranchesOutlined />}
-                placeholder="请输入基准分支名称，如: main, master, develop"
-                value={branchInput}
-                onChange={(e) => setBranchInput(e.target.value)}
-                onPressEnter={handleBranchConfirm}
-                autoFocus
-              />
-            </div>
-          )}
-        </Modal>
       </div>
     </div>
   );
 };
 
 export default HomePage;
+
+
+
+
+
+
 
 
 

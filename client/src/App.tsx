@@ -4,6 +4,7 @@ import zhCN from 'antd/locale/zh_CN';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import AssetsPage from './pages/AssetsPage';
+import MyTasksPage from './pages/MyTasksPage';
 import TaskDetailPage from './pages/TaskDetailPage';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
         <Routes>
           <Route path="/" element={<MainLayout />}>
             <Route index element={<HomePage />} />
+            <Route path="my-tasks" element={<MyTasksPage />} />
             <Route path="assets" element={<AssetsPage />} />
             <Route path="tasks/:taskId" element={<TaskDetailPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -31,3 +33,4 @@ function App() {
 }
 
 export default App;
+
