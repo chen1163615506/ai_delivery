@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Space, SpaceMember, GitRepo, Task, Conversation, DeliveryReport, PendingRequirement } from '../types';
+import type { Space, SpaceMember, GitRepo, GitRepository, Task, Conversation, DeliveryReport, PendingRequirement } from '../types';
 
 // 检测是否在生产环境（GitHub Pages）
 const isProduction = import.meta.env.PROD && window.location.hostname.includes('github.io');
@@ -1795,25 +1795,33 @@ export default new PushNotificationService();`,
   },
 };
 
-// Mock Git仓库数据
-const mockGitRepos: Record<string, GitRepo[]> = {
+// Mock Git仓库数据 - 用于空间知识页面
+const mockGitRepos: Record<string, GitRepository[]> = {
   '1': [
     {
       id: 'repo-1',
       spaceId: '1',
       name: 'ai-delivery-backend',
       url: 'https://github.com/example/ai-delivery-backend',
-      description: '后端服务',
+      defaultBranch: 'main',
+      status: 'connected',
       knowledgeStatus: 'generated',
       knowledgeGeneratedAt: new Date(Date.now() - 86400000).toISOString(),
+      createdBy: 'user1',
+      createdAt: new Date(Date.now() - 86400000 * 30).toISOString(),
+      updatedAt: new Date().toISOString(),
     },
     {
       id: 'repo-2',
       spaceId: '1',
       name: 'ai-delivery-frontend',
       url: 'https://github.com/example/ai-delivery-frontend',
-      description: '前端应用',
+      defaultBranch: 'main',
+      status: 'connected',
       knowledgeStatus: 'not_generated',
+      createdBy: 'user1',
+      createdAt: new Date(Date.now() - 86400000 * 20).toISOString(),
+      updatedAt: new Date().toISOString(),
     },
   ],
   '2': [
@@ -1822,7 +1830,12 @@ const mockGitRepos: Record<string, GitRepo[]> = {
       spaceId: '2',
       name: 'codelink-engine',
       url: 'https://github.com/example/codelink-engine',
-      description: 'AI引擎',
+      defaultBranch: 'main',
+      status: 'connected',
+      knowledgeStatus: 'not_generated',
+      createdBy: 'user2',
+      createdAt: new Date(Date.now() - 86400000 * 40).toISOString(),
+      updatedAt: new Date().toISOString(),
     },
   ],
   '3': [
@@ -1831,14 +1844,24 @@ const mockGitRepos: Record<string, GitRepo[]> = {
       spaceId: '3',
       name: 'moma-backend',
       url: 'https://github.com/example/moma-backend',
-      description: '后端服务',
+      defaultBranch: 'master',
+      status: 'connected',
+      knowledgeStatus: 'not_generated',
+      createdBy: 'user3',
+      createdAt: new Date(Date.now() - 86400000 * 50).toISOString(),
+      updatedAt: new Date().toISOString(),
     },
     {
       id: 'repo-5',
       spaceId: '3',
       name: 'moma-mobile',
       url: 'https://github.com/example/moma-mobile',
-      description: '移动应用',
+      defaultBranch: 'master',
+      status: 'connected',
+      knowledgeStatus: 'not_generated',
+      createdBy: 'user3',
+      createdAt: new Date(Date.now() - 86400000 * 45).toISOString(),
+      updatedAt: new Date().toISOString(),
     },
   ],
 };
@@ -2263,9 +2286,9 @@ export const spaceApi = {
 
   // Git仓库管理
   getRepos: (spaceId: string) =>
-    api.get<{ success: boolean; data: GitRepo[] }>(`/spaces/${spaceId}/repos`),
-  addRepo: (spaceId: string, data: Partial<GitRepo>) =>
-    api.post<{ success: boolean; data: GitRepo }>(`/spaces/${spaceId}/repos`, data),
+    api.get<{ success: boolean; data: GitRepository[] }>(`/spaces/${spaceId}/repos`),
+  addRepo: (spaceId: string, data: Partial<GitRepository>) =>
+    api.post<{ success: boolean; data: GitRepository }>(`/spaces/${spaceId}/repos`, data),
   deleteRepo: (spaceId: string, repoId: string) =>
     api.delete(`/spaces/${spaceId}/repos/${repoId}`),
 
