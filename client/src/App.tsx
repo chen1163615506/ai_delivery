@@ -3,9 +3,11 @@ import { ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
-import AssetsPage from './pages/AssetsPage';
-import MyTasksPage from './pages/MyTasksPage';
+import SpaceSettingsPage from './pages/SpaceSettingsPage';
+import TaskBoardPage from './pages/TaskBoardPage';
 import TaskDetailPage from './pages/TaskDetailPage';
+import SpaceKnowledgePage from './pages/SpaceKnowledgePage';
+import { SpaceProvider } from './contexts/SpaceContext';
 
 function App() {
   return (
@@ -17,17 +19,20 @@ function App() {
         },
       }}
     >
-      <BrowserRouter basename="/ai_delivery">
-        <Routes>
-          <Route path="/" element={<MainLayout />}>
-            <Route index element={<HomePage />} />
-            <Route path="my-tasks" element={<MyTasksPage />} />
-            <Route path="assets" element={<AssetsPage />} />
-            <Route path="tasks/:taskId" element={<TaskDetailPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <SpaceProvider>
+        <BrowserRouter basename="/ai_delivery">
+          <Routes>
+            <Route path="/" element={<MainLayout />}>
+              <Route index element={<HomePage />} />
+              <Route path="task-board" element={<TaskBoardPage />} />
+              <Route path="space-knowledge" element={<SpaceKnowledgePage />} />
+              <Route path="space-settings" element={<SpaceSettingsPage />} />
+              <Route path="tasks/:taskId" element={<TaskDetailPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </SpaceProvider>
     </ConfigProvider>
   );
 }

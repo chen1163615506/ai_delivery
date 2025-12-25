@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Button, List, Typography, Divider, Empty, Badge } from 'antd';
+import { Layout, Button, List, Typography, Divider, Empty } from 'antd';
 import {
   PlusOutlined,
-  FolderOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   ClockCircleOutlined,
@@ -11,9 +10,12 @@ import {
   SyncOutlined,
   CloseCircleOutlined,
   AppstoreOutlined,
+  BookOutlined,
 } from '@ant-design/icons';
-import { taskApi } from '../services/api';
+import { taskApi, spaceApi } from '../services/api';
 import type { Task } from '../types';
+import SpaceSwitcher from '../components/SpaceSwitcher';
+import { useSpace } from '../contexts/SpaceContext';
 
 const { Sider, Content } = Layout;
 const { Text } = Typography;
@@ -22,13 +24,28 @@ const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(false);
-  const [pendingDecisionCount, setPendingDecisionCount] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
+  const { currentSpace, setAllSpaces } = useSpace();
+
+  // 加载所有空间
+  useEffect(() => {
+    const loadSpaces = async () => {
+      try {
+        const response = await spaceApi.getAll();
+        setAllSpaces(response.data.data);
+      } catch (error) {
+        console.error('Failed to load spaces:', error);
+      }
+    };
+    loadSpaces();
+  }, [setAllSpaces]);
 
   useEffect(() => {
-    loadTasks();
-  }, []);
+    if (currentSpace) {
+      loadTasks();
+    }
+  }, [currentSpace]);
 
   // 监听路由变化，当导航到任务详情页时刷新任务列表
   useEffect(() => {
@@ -38,13 +55,12 @@ const MainLayout = () => {
   }, [location.pathname]);
 
   const loadTasks = async () => {
+    if (!currentSpace) return;
+
     try {
       setLoading(true);
-      const response = await taskApi.getAll();
+      const response = await taskApi.getAll({ spaceId: currentSpace.id });
       setTasks(response.data.data);
-
-      // Mock待决策数量（实际应该从后端API获取）
-      setPendingDecisionCount(3);
     } catch (error) {
       console.error('Failed to load tasks:', error);
     } finally {
@@ -97,17 +113,22 @@ const MainLayout = () => {
             paddingLeft: 16,
             paddingRight: 16,
             borderBottom: '1px solid #e0e0e0',
-            fontWeight: 600,
-            fontSize: 16,
-            color: '#1677ff',
           }}
         >
-          {!collapsed && <span>AI需求交付</span>}
+          {!collapsed && (
+            <span style={{
+              fontWeight: 600,
+              fontSize: 16,
+              color: '#1677ff',
+            }}>
+              AI需求交付
+            </span>
+          )}
           <Button
             type="text"
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             onClick={() => setCollapsed(!collapsed)}
-            style={{ fontSize: 16, width: 32, height: 32 }}
+            style={{ fontSize: 16, width: 32, height: 32, flexShrink: 0 }}
           />
         </div>
 
@@ -121,56 +142,20 @@ const MainLayout = () => {
           >
             {!collapsed && '新建任务'}
           </Button>
-          <div style={{ position: 'relative', width: '100%', marginBottom: 8 }}>
-            <Button
-              icon={<AppstoreOutlined />}
-              onClick={() => navigate('/my-tasks')}
-              block
-            >
-              {!collapsed && '我的任务'}
-            </Button>
-            {pendingDecisionCount > 0 && !collapsed && (
-              <div style={{
-                position: 'absolute',
-                top: '50%',
-                right: 12,
-                transform: 'translateY(-50%)',
-              }}>
-                <Badge
-                  count={pendingDecisionCount}
-                  styles={{
-                    indicator: {
-                      backgroundColor: '#ff4d4f',
-                      boxShadow: '0 0 0 1px #fff',
-                    }
-                  }}
-                />
-              </div>
-            )}
-            {pendingDecisionCount > 0 && collapsed && (
-              <div style={{
-                position: 'absolute',
-                top: 6,
-                right: 6,
-              }}>
-                <Badge
-                  dot
-                  styles={{
-                    indicator: {
-                      backgroundColor: '#ff4d4f',
-                      boxShadow: '0 0 0 1px #fff',
-                    }
-                  }}
-                />
-              </div>
-            )}
-          </div>
           <Button
-            icon={<FolderOutlined />}
-            onClick={() => navigate('/assets')}
+            icon={<AppstoreOutlined />}
+            onClick={() => navigate('/task-board')}
+            block
+            style={{ marginBottom: 8 }}
+          >
+            {!collapsed && '任务看板'}
+          </Button>
+          <Button
+            icon={<BookOutlined />}
+            onClick={() => navigate('/space-knowledge')}
             block
           >
-            {!collapsed && '我的资产'}
+            {!collapsed && '空间知识'}
           </Button>
         </div>
 
@@ -256,10 +241,23 @@ const MainLayout = () => {
         )}
       </Sider>
       <Layout>
+        <div
+          style={{
+            height: 56,
+            background: '#ffffff',
+            borderBottom: '1px solid #e0e0e0',
+            display: 'flex',
+            alignItems: 'center',
+            paddingLeft: 24,
+            paddingRight: 24,
+          }}
+        >
+          <SpaceSwitcher />
+        </div>
         <Content
           style={{
             background: '#ffffff',
-            minHeight: '100vh',
+            minHeight: 'calc(100vh - 56px)',
           }}
         >
           <Outlet />
@@ -270,5 +268,10 @@ const MainLayout = () => {
 };
 
 export default MainLayout;
+
+
+
+
+
 
 

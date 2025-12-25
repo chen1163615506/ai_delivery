@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Project, GitRepo, Task, Conversation, DeliveryReport, ProjectAssignee, PendingRequirement } from '../types';
+import type { Space, SpaceMember, GitRepo, Task, Conversation, DeliveryReport, PendingRequirement } from '../types';
 
 // 检测是否在生产环境（GitHub Pages）
 const isProduction = import.meta.env.PROD && window.location.hostname.includes('github.io');
@@ -13,11 +13,20 @@ const api = axios.create({
   timeout: 5000,
 });
 
-// Mock 数据
-const mockProjects: Project[] = [
+// Mock 数据 - 空间（包含个人空间和项目空间）
+const mockSpaces: Space[] = [
+  {
+    id: 'personal-1',
+    name: '我的个人空间',
+    type: 'personal',
+    description: '这是你的个人工作空间',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
   {
     id: '1',
     name: 'AI交付平台',
+    type: 'project',
     description: '端到端AI需求交付平台',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -25,6 +34,7 @@ const mockProjects: Project[] = [
   {
     id: '2',
     name: 'CodeLink',
+    type: 'project',
     description: '智能代码助手平台',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -32,15 +42,17 @@ const mockProjects: Project[] = [
   {
     id: '3',
     name: 'Moma',
+    type: 'project',
     description: '移动办公平台',
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),  },
+    updatedAt: new Date().toISOString(),
+  },
 ];
 
 const mockTasks: Task[] = [
   {
     id: '1',
-    projectId: '1',
+    spaceId: '1',
     title: '实现用户认证功能',
     description: '需要实现用户登录、注册、密码重置等功能',
     status: 'completed',
@@ -54,7 +66,7 @@ const mockTasks: Task[] = [
   },
   {
     id: '2',
-    projectId: '1',
+    spaceId: '1',
     title: '添加支付功能',
     description: '集成支付宝和微信支付',
     status: 'pending_confirm',
@@ -65,9 +77,49 @@ const mockTasks: Task[] = [
       { id: '2-1', gitRepoId: 'repo-1', gitRepoName: 'ai-delivery-backend', baseBranch: 'develop' },
     ],
   },
+  // 从任务池下发的任务
+  {
+    id: '5',
+    spaceId: '1',
+    title: '优化首页加载性能 - 张三负责',
+    description: '首页加载时间过长，需要优化图片加载和代码分割（张三负责前端部分）',
+    status: 'in_progress',
+    createdBy: 'user1',
+    createdAt: new Date(Date.now() - 3000000).toISOString(),
+    updatedAt: new Date().toISOString(),
+    gitRepos: [
+      { id: '5-1', gitRepoId: 'repo-2', gitRepoName: 'ai-delivery-frontend', baseBranch: 'main' },
+    ],
+  },
+  {
+    id: '6',
+    spaceId: '1',
+    title: '优化首页加载性能 - 李四负责',
+    description: '首页加载时间过长，需要优化图片加载和代码分割（李四负责后端部分）',
+    status: 'in_progress',
+    createdBy: 'user2',
+    createdAt: new Date(Date.now() - 2800000).toISOString(),
+    updatedAt: new Date().toISOString(),
+    gitRepos: [
+      { id: '6-1', gitRepoId: 'repo-1', gitRepoName: 'ai-delivery-backend', baseBranch: 'main' },
+    ],
+  },
+  {
+    id: '7',
+    spaceId: '1',
+    title: '实现代码审查功能',
+    description: '自动检测代码质量问题并给出改进建议',
+    status: 'in_progress',
+    createdBy: 'user3',
+    createdAt: new Date(Date.now() - 4800000).toISOString(),
+    updatedAt: new Date().toISOString(),
+    gitRepos: [
+      { id: '7-1', gitRepoId: 'repo-1', gitRepoName: 'ai-delivery-backend', baseBranch: 'develop' },
+    ],
+  },
   {
     id: '3',
-    projectId: '2',
+    spaceId: '2',
     title: '优化代码补全算法',
     description: '提升代码补全的准确率和响应速度',
     status: 'completed',
@@ -80,7 +132,7 @@ const mockTasks: Task[] = [
   },
   {
     id: '4',
-    projectId: '3',
+    spaceId: '3',
     title: '实现消息推送功能',
     description: '支持即时消息推送和离线消息',
     status: 'pending_confirm',
@@ -96,61 +148,65 @@ const mockTasks: Task[] = [
 
 const mockPendingRequirements: PendingRequirement[] = [
   {
-    id: '1',
-    projectId: '1',
+    id: 'req-1',
+    spaceId: '1',
     title: '优化首页加载性能',
     description: '首页加载时间过长，需要优化图片加载和代码分割',
     priority: 'high',
     source: 'Keones',
     sourceUrl: 'https://example.com/req/1',
+    createdBy: 'user1',
     createdAt: new Date(Date.now() - 3600000).toISOString(),
+    assignees: [
+      { userId: 'user1', userName: '张三', status: 'dispatched', taskId: '5', dispatchedAt: new Date(Date.now() - 3000000).toISOString() },
+      { userId: 'user2', userName: '李四', status: 'dispatched', taskId: '6', dispatchedAt: new Date(Date.now() - 2800000).toISOString() },
+      { userId: 'user3', userName: '王五', status: 'pending' },
+    ],
   },
   {
-    id: '2',
-    projectId: '1',
+    id: 'req-2',
+    spaceId: '1',
     title: '添加数据导出功能',
     description: '用户需要能够导出报表数据为 Excel 格式',
     priority: 'medium',
     source: '需求池',
+    createdBy: 'user2',
     createdAt: new Date(Date.now() - 7200000).toISOString(),
+    assignees: [
+      { userId: 'user2', userName: '李四', status: 'pending' },
+      { userId: 'user4', userName: '赵六', status: 'pending' },
+    ],
   },
   {
-    id: '3',
-    projectId: '2',
+    id: 'req-3',
+    spaceId: '1',
     title: '实现代码审查功能',
     description: '自动检测代码质量问题并给出改进建议',
     priority: 'high',
     source: 'Keones',
     sourceUrl: 'https://example.com/req/3',
+    createdBy: 'user1',
     createdAt: new Date(Date.now() - 5400000).toISOString(),
+    assignees: [
+      { userId: 'user3', userName: '王五', status: 'dispatched', taskId: '7', dispatchedAt: new Date(Date.now() - 4800000).toISOString() },
+    ],
   },
   {
-    id: '4',
-    projectId: '2',
-    title: '支持多语言代码补全',
-    description: '扩展支持 Python、Java、Go 等语言',
-    priority: 'medium',
-    source: '需求池',
-    createdAt: new Date(Date.now() - 9000000).toISOString(),
-  },
-  {
-    id: '5',
-    projectId: '3',
-    title: '添加视频会议功能',
-    description: '支持多人视频会议和屏幕共享',
+    id: 'req-4',
+    spaceId: '1',
+    title: '实现用户消息推送功能',
+    description: '需要实现站内消息和移动端推送功能，支持多种消息类型（系统通知、任务提醒、审批通知等）。要求：\n1. 后端实现消息推送接口和消息中心\n2. 前端实现消息列表和消息详情页\n3. 移动端集成极光推送SDK\n4. 支持消息已读/未读状态管理',
     priority: 'high',
-    source: 'Keones',
-    sourceUrl: 'https://example.com/req/5',
+    source: 'Jira',
+    sourceUrl: 'https://jira.example.com/browse/PROJ-456',
+    imageUrl: 'https://example.com/screenshots/message-push.png',
+    documentUrl: 'https://docs.example.com/message-push-design',
+    createdBy: 'product_manager',
     createdAt: new Date(Date.now() - 1800000).toISOString(),
-  },
-  {
-    id: '6',
-    projectId: '3',
-    title: '优化移动端性能',
-    description: '减少移动端的内存占用和电量消耗',
-    priority: 'low',
-    source: '需求池',
-    createdAt: new Date(Date.now() - 10800000).toISOString(),
+    assignees: [
+      { userId: 'user1', userName: '张三', status: 'pending' },
+      { userId: 'user2', userName: '李四', status: 'pending' },
+    ],
   },
 ];
 
@@ -1744,23 +1800,26 @@ const mockGitRepos: Record<string, GitRepo[]> = {
   '1': [
     {
       id: 'repo-1',
-      projectId: '1',
+      spaceId: '1',
       name: 'ai-delivery-backend',
       url: 'https://github.com/example/ai-delivery-backend',
       description: '后端服务',
+      knowledgeStatus: 'generated',
+      knowledgeGeneratedAt: new Date(Date.now() - 86400000).toISOString(),
     },
     {
       id: 'repo-2',
-      projectId: '1',
+      spaceId: '1',
       name: 'ai-delivery-frontend',
       url: 'https://github.com/example/ai-delivery-frontend',
       description: '前端应用',
+      knowledgeStatus: 'not_generated',
     },
   ],
   '2': [
     {
       id: 'repo-3',
-      projectId: '2',
+      spaceId: '2',
       name: 'codelink-engine',
       url: 'https://github.com/example/codelink-engine',
       description: 'AI引擎',
@@ -1769,17 +1828,73 @@ const mockGitRepos: Record<string, GitRepo[]> = {
   '3': [
     {
       id: 'repo-4',
-      projectId: '3',
+      spaceId: '3',
       name: 'moma-backend',
       url: 'https://github.com/example/moma-backend',
       description: '后端服务',
     },
     {
       id: 'repo-5',
-      projectId: '3',
+      spaceId: '3',
       name: 'moma-mobile',
       url: 'https://github.com/example/moma-mobile',
       description: '移动应用',
+    },
+  ],
+};
+
+// Mock空间成员数据
+const mockSpaceMembers: Record<string, SpaceMember[]> = {
+  'personal-1': [
+    {
+      id: 'member-personal-1',
+      spaceId: 'personal-1',
+      userName: '张三',
+      userEmail: 'zhangsan@example.com',
+      role: 'owner',
+      createdAt: new Date().toISOString(),
+    },
+  ],
+  '1': [
+    {
+      id: 'member-1-1',
+      spaceId: '1',
+      userName: '张三',
+      userEmail: 'zhangsan@example.com',
+      role: 'owner',
+      position: '产品经理',
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'member-1-2',
+      spaceId: '1',
+      userName: '李四',
+      userEmail: 'lisi@example.com',
+      role: 'admin',
+      position: '技术负责人',
+      createdAt: new Date().toISOString(),
+    },
+  ],
+  '2': [
+    {
+      id: 'member-2-1',
+      spaceId: '2',
+      userName: '王五',
+      userEmail: 'wangwu@example.com',
+      role: 'owner',
+      position: '项目经理',
+      createdAt: new Date().toISOString(),
+    },
+  ],
+  '3': [
+    {
+      id: 'member-3-1',
+      spaceId: '3',
+      userName: '赵六',
+      userEmail: 'zhaoliu@example.com',
+      role: 'owner',
+      position: 'CEO',
+      createdAt: new Date().toISOString(),
     },
   ],
 };
@@ -1799,10 +1914,106 @@ const mockAdapter = (config: any) => {
       }
     }
 
-    // 项目Git仓库列表
-    if (url?.match(/\/projects\/\w+\/repos$/) && config.method === 'get') {
-      const projectId = url.split('/')[2];
-      const repos = mockGitRepos[projectId] || [];
+    // 生成仓库知识
+    if (url?.match(/\/spaces\/[\w-]+\/repos\/[\w-]+\/knowledge\/generate$/) && config.method === 'post') {
+      const parts = url.split('/');
+      const spaceId = parts[2];
+      const repoId = parts[4];
+
+      // 更新仓库状态为生成中
+      const repos = mockGitRepos[spaceId];
+      if (repos) {
+        const repo = repos.find(r => r.id === repoId);
+        if (repo) {
+          repo.knowledgeStatus = 'generating';
+        }
+      }
+
+      // 模拟异步生成
+      setTimeout(() => {
+        if (repos) {
+          const repo = repos.find(r => r.id === repoId);
+          if (repo) {
+            repo.knowledgeStatus = 'generated';
+            repo.knowledgeGeneratedAt = new Date().toISOString();
+          }
+        }
+      }, 2000);
+
+      return resolve({
+        data: { success: true, message: '知识生成已启动' },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config,
+      });
+    }
+
+    // 获取仓库知识
+    if (url?.match(/\/spaces\/[\w-]+\/repos\/[\w-]+\/knowledge$/) && config.method === 'get') {
+      const parts = url.split('/');
+      const spaceId = parts[2];
+      const repoId = parts[4];
+
+      const repos = mockGitRepos[spaceId];
+      const repo = repos?.find(r => r.id === repoId);
+
+      if (repo?.knowledgeStatus === 'generated') {
+        const mockKnowledgeContent = `# ${repo.name} 仓库知识文档
+
+## 项目概述
+这是一个示例项目的知识文档，包含了代码库的架构和使用说明。
+
+## 技术栈
+- React 18
+- TypeScript 5
+- Ant Design
+- Vite
+
+## 目录结构
+\`\`\`
+src/
+  ├── components/     # 公共组件
+  ├── pages/          # 页面组件
+  ├── services/       # API 服务
+  ├── types/          # 类型定义
+  └── utils/          # 工具函数
+\`\`\`
+
+## 主要功能模块
+1. 用户认证
+2. 任务管理
+3. 交付报告
+4. Git 仓库管理
+
+## 开发规范
+- 使用 ESLint 进行代码检查
+- 使用 Prettier 进行代码格式化
+- 组件命名采用 PascalCase
+- 工具函数命名采用 camelCase`;
+
+        return resolve({
+          data: { success: true, data: { content: mockKnowledgeContent } },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config,
+        });
+      }
+
+      return resolve({
+        data: { success: false, error: '知识未生成' },
+        status: 404,
+        statusText: 'Not Found',
+        headers: {},
+        config,
+      });
+    }
+
+    // 空间Git仓库列表
+    if (url?.match(/\/spaces\/[\w-]+\/repos$/) && config.method === 'get') {
+      const spaceId = url.split('/')[2];
+      const repos = mockGitRepos[spaceId] || [];
       return resolve({
         data: { success: true, data: repos },
         status: 200,
@@ -1812,10 +2023,23 @@ const mockAdapter = (config: any) => {
       });
     }
 
-    // 项目列表
-    if (url?.includes('/projects') && config.method === 'get') {
+    // 空间成员列表
+    if (url?.match(/\/spaces\/[\w-]+\/members$/) && config.method === 'get') {
+      const spaceId = url.split('/')[2];
+      const members = mockSpaceMembers[spaceId] || [];
       return resolve({
-        data: { success: true, data: mockProjects },
+        data: { success: true, data: members },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config,
+      });
+    }
+
+    // 空间列表
+    if (url?.includes('/spaces') && config.method === 'get') {
+      return resolve({
+        data: { success: true, data: mockSpaces },
         status: 200,
         statusText: 'OK',
         headers: {},
@@ -1894,7 +2118,7 @@ const mockAdapter = (config: any) => {
       const requestData = typeof config.data === 'string' ? JSON.parse(config.data) : config.data;
       const newTask: Task = {
         id: String(mockTasks.length + 1),
-        projectId: requestData.projectId,
+        spaceId: requestData.spaceId || '1',
         title: requestData.title,
         description: requestData.description,
         status: 'in_progress',
@@ -1950,9 +2174,9 @@ if (false) {  // 禁用旧的拦截器
       // 捕获所有错误并返回 Mock 数据
 
       const url = error.config.url;
-        if (url?.includes('/projects')) {
+        if (url?.includes('/spaces')) {
           return Promise.resolve({
-            data: { success: true, data: mockProjects },
+            data: { success: true, data: mockSpaces },
             status: 200,
             statusText: 'OK',
             headers: {},
@@ -2028,40 +2252,43 @@ if (false) {  // 禁用旧的拦截器
 }
 
 // 项目相关API
-export const projectApi = {
-  getAll: () => api.get<{ success: boolean; data: Project[] }>('/projects'),
-  getById: (id: string) => api.get<{ success: boolean; data: Project }>(`/projects/${id}`),
-  create: (data: Partial<Project>) => api.post<{ success: boolean; data: Project }>('/projects', data),
-  update: (id: string, data: Partial<Project>) =>
-    api.put<{ success: boolean; data: Project }>(`/projects/${id}`, data),
-  delete: (id: string) => api.delete(`/projects/${id}`),
+// 空间相关API（替代原来的projectApi）
+export const spaceApi = {
+  getAll: () => api.get<{ success: boolean; data: Space[] }>('/spaces'),
+  getById: (id: string) => api.get<{ success: boolean; data: Space }>(`/spaces/${id}`),
+  create: (data: Partial<Space>) => api.post<{ success: boolean; data: Space }>('/spaces', data),
+  update: (id: string, data: Partial<Space>) =>
+    api.put<{ success: boolean; data: Space }>(`/spaces/${id}`, data),
+  delete: (id: string) => api.delete(`/spaces/${id}`),
 
   // Git仓库管理
-  getRepos: (projectId: string) =>
-    api.get<{ success: boolean; data: GitRepo[] }>(`/projects/${projectId}/repos`),
-  addRepo: (projectId: string, data: Partial<GitRepo>) =>
-    api.post<{ success: boolean; data: GitRepo }>(`/projects/${projectId}/repos`, data),
-  deleteRepo: (projectId: string, repoId: string) =>
-    api.delete(`/projects/${projectId}/repos/${repoId}`),
+  getRepos: (spaceId: string) =>
+    api.get<{ success: boolean; data: GitRepo[] }>(`/spaces/${spaceId}/repos`),
+  addRepo: (spaceId: string, data: Partial<GitRepo>) =>
+    api.post<{ success: boolean; data: GitRepo }>(`/spaces/${spaceId}/repos`, data),
+  deleteRepo: (spaceId: string, repoId: string) =>
+    api.delete(`/spaces/${spaceId}/repos/${repoId}`),
 
   // Git仓库知识管理
-  generateRepoKnowledge: (projectId: string, repoId: string) =>
-    api.post<{ success: boolean; message: string }>(`/projects/${projectId}/repos/${repoId}/knowledge/generate`),
-  getRepoKnowledge: (projectId: string, repoId: string) =>
-    api.get<{ success: boolean; data: { knowledge: string | null; knowledgeStatus: string; knowledgeGeneratedAt: Date | string | null } }>(`/projects/${projectId}/repos/${repoId}/knowledge`),
+  generateRepoKnowledge: (spaceId: string, repoId: string) =>
+    api.post<{ success: boolean; message: string }>(`/spaces/${spaceId}/repos/${repoId}/knowledge/generate`),
+  getRepoKnowledge: (spaceId: string, repoId: string) =>
+    api.get<{ success: boolean; data: { content: string } }>(`/spaces/${spaceId}/repos/${repoId}/knowledge`),
 
-  // 人员管理
-  getAssignees: (projectId: string) =>
-    api.get<{ success: boolean; data: ProjectAssignee[] }>(`/projects/${projectId}/assignees`),
-  addAssignee: (projectId: string, data: Partial<ProjectAssignee>) =>
-    api.post<{ success: boolean; data: ProjectAssignee }>(`/projects/${projectId}/assignees`, data),
-  deleteAssignee: (projectId: string, assigneeId: string) =>
-    api.delete(`/projects/${projectId}/assignees/${assigneeId}`),
+  // 成员管理（替代原来的人员管理）
+  getMembers: (spaceId: string) =>
+    api.get<{ success: boolean; data: SpaceMember[] }>(`/spaces/${spaceId}/members`),
+  addMember: (spaceId: string, data: Partial<SpaceMember>) =>
+    api.post<{ success: boolean; data: SpaceMember }>(`/spaces/${spaceId}/members`, data),
+  updateMemberRole: (spaceId: string, memberId: string, role: string) =>
+    api.put<{ success: boolean; data: SpaceMember }>(`/spaces/${spaceId}/members/${memberId}/role`, { role }),
+  deleteMember: (spaceId: string, memberId: string) =>
+    api.delete(`/spaces/${spaceId}/members/${memberId}`),
 };
 
 // 任务相关API
 export const taskApi = {
-  getAll: (params?: { projectId?: string; status?: string }) =>
+  getAll: (params?: { spaceId?: string; status?: string }) =>
     api.get<{ success: boolean; data: Task[] }>('/tasks', { params }),
   getById: (id: string) => api.get<{ success: boolean; data: Task }>(`/tasks/${id}`),
   create: (data: Partial<Task>) => api.post<{ success: boolean; data: Task }>('/tasks', data),
@@ -2075,7 +2302,7 @@ export const taskApi = {
   getReport: (taskId: string) =>
     api.get<{ success: boolean; data: DeliveryReport }>(`/tasks/${taskId}/report`),
   // 获取待下发任务
-  getPendingRequirements: (params?: { projectId?: string }) =>
+  getPendingRequirements: (params?: { spaceId?: string }) =>
     api.get<{ success: boolean; data: PendingRequirement[] }>('/tasks/pending-requirements/list', { params }),
 };
 
